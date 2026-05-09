@@ -1,6 +1,6 @@
 # Personal Meal Plan
 
-Dự án lập kế hoạch bữa cơm tối gia đình và publish thành trang GitHub Pages.
+Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi publish thành trang GitHub Pages.
 
 ## Nguồn Sự Thật
 
@@ -14,6 +14,8 @@ Dự án lập kế hoạch bữa cơm tối gia đình và publish thành trang
 ## Quy Tắc Lập Kế Hoạch
 
 - Lập kế hoạch bữa tối từ thứ 2 đến thứ 6.
+- Lập kế hoạch bữa sáng từ thứ 2 đến thứ 6.
+- Bữa sáng không cần cân bằng theo nhóm món, nhưng không được trùng trong cùng tuần.
 - Lập kế hoạch cho 4 tuần kế tiếp, từ thứ 2 đến thứ 6.
 - Kế hoạch tự động được tạo hằng tuần vào thứ 6 theo giờ Việt Nam.
 - Mỗi tuần đủ 5 ngày nên cân bằng:
@@ -34,6 +36,7 @@ Dự án lập kế hoạch bữa cơm tối gia đình và publish thành trang
 
 - Khi người dùng yêu cầu lên kế hoạch ăn, tạo hoặc cập nhật `meal-plan.md` bằng script hiện có khi phù hợp.
 - Lưu kế hoạch theo thứ tự tuần, rồi theo từng ngày trong tuần.
+- Mỗi ngày ghi rõ bữa sáng.
 - Mỗi ngày ghi rõ món chính; ngày chay ghi món chính chay.
 - Chỉ các bữa có món chính là cơm mới ăn kèm món canh và món xào/luộc.
 - Các bữa cháo, mì, bún, hoặc bánh canh chỉ ghi món chính, không thêm món canh hoặc món xào/luộc.

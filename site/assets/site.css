@@ -293,6 +293,10 @@ a:focus-visible {
   padding-top: 10px;
 }
 
+.meal-list__breakfast dd {
+  color: var(--green);
+}
+
 .meal-list dt {
   color: var(--red);
   font-size: 0.75rem;

@@ -37,6 +37,7 @@ const fullWeekPatterns = [
     ["fish", "rice"]
   ]
 ];
+const weekdaysPerWeek = 5;
 const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
 
 function pad(number) {
@@ -69,9 +70,13 @@ function validateMenu() {
   );
   const requiredVegetarianStarches = new Set(fullWeekPatterns.flat().map(([, starch]) => starch));
   const mains = Array.isArray(menu.mains) ? menu.mains : [];
+  const breakfasts = Array.isArray(menu.breakfasts) ? menu.breakfasts : [];
   const soups = Array.isArray(menu.soups) ? menu.soups : [];
   const sides = Array.isArray(menu.sides) ? menu.sides : [];
 
+  if (!Array.isArray(menu.breakfasts) || menu.breakfasts.length < weekdaysPerWeek) {
+    errors.push(`data/menu.json must include at least ${weekdaysPerWeek} breakfast entries.`);
+  }
   if (!Array.isArray(menu.mains) || menu.mains.length === 0) {
     errors.push("data/menu.json must include a non-empty mains array.");
   }
@@ -122,6 +127,7 @@ function validateMenu() {
   }
 
   for (const [field, items] of [
+    ["breakfasts", breakfasts],
     ["soups", soups],
     ["sides", sides]
   ]) {
@@ -257,9 +263,24 @@ function chooseSide(list, seed) {
   return list[rotateIndex(seed, list.length)];
 }
 
-function buildDay(date, weekIndex, usedNames) {
+function chooseBreakfast(seed, usedBreakfasts) {
+  const start = rotateIndex(seed, menu.breakfasts.length);
+
+  for (let offset = 0; offset < menu.breakfasts.length; offset += 1) {
+    const breakfast = menu.breakfasts[(start + offset) % menu.breakfasts.length];
+
+    if (!usedBreakfasts.has(breakfast)) {
+      return breakfast;
+    }
+  }
+
+  throw new Error("Unable to choose a non-duplicate breakfast for the week.");
+}
+
+function buildDay(date, weekIndex, usedNames, usedBreakfasts) {
   const weekdayIndex = date.getUTCDay() - 1;
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
+  const breakfast = chooseBreakfast(seed + weekIndex * 11, usedBreakfasts);
   const vegetarianDay = isVegetarianLunarDay(date);
   const pattern = fullWeekPatterns[weekIndex % fullWeekPatterns.length];
   const [group, starch] = pattern[weekdayIndex];
@@ -267,6 +288,7 @@ function buildDay(date, weekIndex, usedNames) {
     ? chooseVegetarianDish(starch, seed + weekIndex)
     : findDish(group, starch, seed + weekIndex, usedNames);
 
+  usedBreakfasts.add(breakfast);
   usedNames.add(dish.name);
 
   const hasRiceSides = !vegetarianDay && dish.starch === "rice";
@@ -275,6 +297,7 @@ function buildDay(date, weekIndex, usedNames) {
     displayDate: toDisplayDate(date),
     weekday: weekdayNames[date.getUTCDay()],
     lunarDate: lunarDateLabel(date),
+    breakfast,
     main: dish.name,
     group: dish.group,
     groupLabel: groupLabels[dish.group],
@@ -288,7 +311,8 @@ function buildDay(date, weekIndex, usedNames) {
 function buildPlanFromDays(days, metadata) {
   const weeks = groupByWeek(days).map((week, weekIndex) => {
     const usedNames = new Set();
-    const days = week.days.map((date) => buildDay(date, weekIndex, usedNames));
+    const usedBreakfasts = new Set();
+    const days = week.days.map((date) => buildDay(date, weekIndex, usedNames, usedBreakfasts));
     const vegetarianDays = days.filter((day) => day.vegetarianDay);
     const notes = [];
 
@@ -350,6 +374,7 @@ function renderMarkdown(plan) {
     for (const day of week.days) {
       lines.push(`### ${day.weekday} - ${day.displayDate}`, "");
       lines.push(`- Ngày âm: ${day.lunarDate}`);
+      lines.push(`- Bữa sáng: ${day.breakfast}`);
       lines.push(`- ${day.vegetarianDay ? "Món chính" : "Món mặn chính"}: ${day.main}`);
       if (day.soup) {
         lines.push(`- Món canh: ${day.soup}`);

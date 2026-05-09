@@ -68,6 +68,27 @@ describe("validatePlan", () => {
     assertValidationError(plan, /main must be a non-empty string/);
   });
 
+  it("rejects a blank breakfast", () => {
+    const plan = clonePlan();
+    plan.weeks[0].days[0].breakfast = " ";
+
+    assertValidationError(plan, /breakfast must be a non-empty string/);
+  });
+
+  it("rejects breakfast dishes that are not in the menu source data", () => {
+    const plan = clonePlan();
+    plan.weeks[0].days[0].breakfast = "bữa sáng không có trong menu";
+
+    assertValidationError(plan, /breakfast must exist in data\/menu\.json/);
+  });
+
+  it("rejects duplicate breakfast dishes in the same week", () => {
+    const plan = clonePlan();
+    plan.weeks[0].days[1].breakfast = plan.weeks[0].days[0].breakfast;
+
+    assertValidationError(plan, /breakfast repeats ".+" in the same week/);
+  });
+
   it("rejects dishes that are not in the menu source data", () => {
     const plan = clonePlan();
     plan.weeks[0].days[0].main = "cơm cá không có trong menu";

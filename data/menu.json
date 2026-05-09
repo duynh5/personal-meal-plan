@@ -1,4 +1,18 @@
 {
+  "breakfasts": [
+    "bánh mì ốp la",
+    "bánh mì thịt nguội",
+    "xôi mặn",
+    "cháo thịt bằm",
+    "phở bò",
+    "bún mọc",
+    "mì trứng",
+    "bánh cuốn",
+    "bánh ướt chả lụa",
+    "hủ tiếu nam vang",
+    "cơm tấm sườn trứng",
+    "sữa chua granola"
+  ],
   "mains": [
     { "name": "cơm bò bít tết + khoai tây", "group": "beefPork", "starch": "rice" },
     { "name": "cơm bò xào cà chua dưa leo", "group": "beefPork", "starch": "rice" },

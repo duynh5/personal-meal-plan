@@ -47,8 +47,12 @@ function renderDay(day) {
         <div class="day-card__tags">${tags.join("")}</div>
       </div>
       <dl class="meal-list">
+        <div class="meal-list__breakfast">
+          <dt>Bữa sáng</dt>
+          <dd>${escapeHtml(day.breakfast)}</dd>
+        </div>
         <div>
-          <dt>Món chính</dt>
+          <dt>Bữa tối</dt>
           <dd>${escapeHtml(day.main)}</dd>
         </div>
         ${
@@ -114,7 +118,7 @@ function renderHtml(plan) {
   <body>
     <header class="page-header">
       <div class="header-copy">
-        <p class="eyebrow">Bữa tối gia đình</p>
+        <p class="eyebrow">Bữa sáng và bữa tối gia đình</p>
         <h1>${escapeHtml(plan.metadata.title)}</h1>
         <p class="header-subtitle">Lịch ăn từ thứ 2 đến thứ 6, tự động cập nhật theo chu kỳ 4 tuần.</p>
       </div>
@@ -151,7 +155,7 @@ function renderHtml(plan) {
     </main>
 
     <footer class="page-footer">
-      <p>Chỉ bữa cơm mới có canh và món xào/luộc. Bún, mì, cháo, bánh canh chỉ ghi món chính.</p>
+      <p>Bữa sáng không trùng trong cùng tuần. Chỉ bữa cơm tối mới có canh và món xào/luộc.</p>
     </footer>
 
     <script src="assets/site.js"></script>

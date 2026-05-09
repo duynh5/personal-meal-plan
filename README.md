@@ -1,6 +1,6 @@
 # Personal Meal Plan
 
-Du an lap ke hoach bua toi gia dinh va publish thanh trang GitHub Pages.
+Du an lap ke hoach bua sang va bua toi gia dinh, roi publish thanh trang GitHub Pages.
 
 ## Chay local
 

@@ -9,6 +9,7 @@ const rootDir = path.resolve(__dirname, "..");
 const planPath = path.join(rootDir, "meal-plan.json");
 const menuPath = path.join(rootDir, "data", "menu.json");
 const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
+const breakfastNames = new Set(Array.isArray(menu.breakfasts) ? menu.breakfasts : []);
 const mainsByName = new Map((Array.isArray(menu.mains) ? menu.mains : []).map((dish) => [dish.name, dish]));
 const soupNames = new Set(Array.isArray(menu.soups) ? menu.soups : []);
 const sideNames = new Set(Array.isArray(menu.sides) ? menu.sides : []);
@@ -221,6 +222,7 @@ export function validatePlan(plan) {
 
     const fullWeek = week.days.length === 5;
     let hasVegetarianMain = false;
+    const weeklyBreakfasts = new Set();
     const duplicateRestrictedDishes = new Set();
     const firstDay = week.days[0];
     const lastDay = week.days[week.days.length - 1];
@@ -282,6 +284,17 @@ export function validatePlan(plan) {
       }
       if (day.lunarDate !== lunarDateLabel(date)) {
         errors.push(`${dayLabel}.lunarDate does not match ${day.date}.`);
+      }
+      if (!isNonEmptyString(day.breakfast)) {
+        errors.push(`${dayLabel}.breakfast must be a non-empty string.`);
+      } else {
+        if (!breakfastNames.has(day.breakfast)) {
+          errors.push(`${dayLabel}.breakfast must exist in data/menu.json.`);
+        }
+        if (weeklyBreakfasts.has(day.breakfast)) {
+          errors.push(`${dayLabel}.breakfast repeats "${day.breakfast}" in the same week.`);
+        }
+        weeklyBreakfasts.add(day.breakfast);
       }
       if (!isNonEmptyString(day.main)) {
         errors.push(`${dayLabel}.main must be a non-empty string.`);

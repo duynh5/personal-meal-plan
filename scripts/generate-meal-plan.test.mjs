@@ -16,6 +16,16 @@ describe("buildRollingPlan", () => {
     assert.doesNotThrow(() => validatePlan(plan));
   });
 
+  it("does not repeat breakfast within a week", () => {
+    const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"));
+
+    for (const week of plan.weeks) {
+      const breakfasts = week.days.map((day) => day.breakfast);
+
+      assert.equal(new Set(breakfasts).size, breakfasts.length);
+    }
+  });
+
   it("rejects invalid run dates", () => {
     assert.throws(() => buildRollingPlan(new Date("not-a-date")), /runDate must be a valid Date/);
   });
