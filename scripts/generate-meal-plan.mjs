@@ -10,6 +10,7 @@ const outputJsonPath = path.join(rootDir, "meal-plan.json");
 const outputMdPath = path.join(rootDir, "meal-plan.md");
 const timeZone = "Asia/Ho_Chi_Minh";
 const vietnamUtcOffset = 7;
+const rollingWeekCount = 4;
 
 const weekdayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const groupLabels = {
@@ -57,12 +58,6 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setUTCDate(next.getUTCDate() + days);
   return next;
-}
-
-function validateTargetMonth({ year, month }, source) {
-  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-    throw new Error(`Invalid target month${source ? ` from ${source}` : ""}: ${year}-${pad(month)}.`);
-  }
 }
 
 function validateMenu() {
@@ -144,67 +139,23 @@ function getVietnamDateParts(date = new Date()) {
   return Object.fromEntries(parts.map((part) => [part.type, part.value]));
 }
 
-function isLastDayInVietnam(date = new Date()) {
+function currentVietnamDate(date = new Date()) {
   const parts = getVietnamDateParts(date);
-  const current = makeUtcDate(Number(parts.year), Number(parts.month), Number(parts.day));
-  const tomorrow = addDays(current, 1);
 
-  return current.getUTCMonth() !== tomorrow.getUTCMonth();
+  return makeUtcDate(Number(parts.year), Number(parts.month), Number(parts.day));
 }
 
-function parseTargetMonth(value) {
-  if (!value) {
-    return null;
-  }
+function nextMondayOnOrAfter(date) {
+  const weekday = date.getUTCDay();
+  const daysUntilMonday = weekday === 1 ? 0 : (8 - weekday) % 7;
 
-  const trimmed = value.trim();
-  let match = trimmed.match(/^(\d{4})-(\d{2})$/);
-  if (match) {
-    const target = { year: Number(match[1]), month: Number(match[2]) };
-    validateTargetMonth(target, value);
-    return target;
-  }
-
-  match = trimmed.match(/^(\d{2})\/(\d{4})$/);
-  if (match) {
-    const target = { year: Number(match[2]), month: Number(match[1]) };
-    validateTargetMonth(target, value);
-    return target;
-  }
-
-  match = trimmed.match(/^(\d{4})\/(\d{2})$/);
-  if (match) {
-    const target = { year: Number(match[1]), month: Number(match[2]) };
-    validateTargetMonth(target, value);
-    return target;
-  }
-
-  throw new Error(`Unsupported TARGET_MONTH format: ${value}. Use YYYY-MM or MM/YYYY.`);
+  return addDays(date, daysUntilMonday);
 }
 
-function nextMonthFromVietnamDate() {
-  const parts = getVietnamDateParts();
-  let year = Number(parts.year);
-  let month = Number(parts.month) + 1;
-
-  if (month === 13) {
-    month = 1;
-    year += 1;
-  }
-
-  return { year, month };
-}
-
-function monthName({ month, year }) {
-  return `${pad(month)}/${year}`;
-}
-
-function listWeekdaysInMonth(year, month) {
+function listWeekdaysInRange(startDate, endDate) {
   const days = [];
-  const lastDay = new Date(Date.UTC(year, month, 0, 12, 0, 0)).getUTCDate();
 
-  for (let day = 1; day <= lastDay; day += 1) {
-    const date = makeUtcDate(year, month, day);
+  for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
     const weekday = date.getUTCDay();
 
     if (weekday >= 1 && weekday <= 5) {
@@ -309,16 +260,15 @@ function buildDay(date, weekIndex, usedNames) {
   };
 }
 
-function buildPlan(target) {
-  const weekdays = listWeekdaysInMonth(target.year, target.month);
-  const weeks = groupByWeek(weekdays).map((week, weekIndex) => {
+function buildPlanFromDays(days, metadata) {
+  const weeks = groupByWeek(days).map((week, weekIndex) => {
     const usedNames = new Set();
     const days = week.days.map((date) => buildDay(date, weekIndex, usedNames));
     const vegetarianDays = days.filter((day) => day.vegetarianDay);
     const notes = [];
 
     if (days.length < 5) {
-      notes.push("Tuần lẻ trong tháng, chỉ lập các ngày thứ 2 đến thứ 6 thuộc tháng này.");
+      notes.push("Tuần chưa đủ 5 ngày ăn trong giai đoạn kế hoạch.");
     }
     if (vegetarianDays.length > 0) {
       notes.push(
@@ -340,15 +290,23 @@ function buildPlan(target) {
   });
 
   return {
-    metadata: {
-      title: `Kế hoạch ăn tháng ${monthName(target)}`,
-      month: target.month,
-      year: target.year,
-      timezone: timeZone,
-      generatedAt: new Date().toISOString()
-    },
+    metadata,
     weeks
   };
+}
+
+function buildRollingPlan(runDate = new Date()) {
+  const startDate = nextMondayOnOrAfter(currentVietnamDate(runDate));
+  const endDate = addDays(startDate, rollingWeekCount * 7 - 1);
+  const days = listWeekdaysInRange(startDate, endDate);
+
+  return buildPlanFromDays(days, {
+    title: `Kế hoạch ăn 4 tuần từ ${toDisplayDate(startDate)}`,
+    startDate: toIsoDate(startDate),
+    endDate: toIsoDate(endDate),
+    timezone: timeZone,
+    generatedAt: new Date().toISOString()
+  });
 }
 
 function renderMarkdown(plan) {
@@ -378,18 +336,9 @@ function renderMarkdown(plan) {
   return `${lines.join("\n").trim()}\n`;
 }
 
-const inputTarget = process.env.TARGET_MONTH || process.argv[2] || "";
-const target = parseTargetMonth(inputTarget) ?? nextMonthFromVietnamDate();
-const isManualTarget = Boolean(inputTarget);
-validateTargetMonth(target);
 validateMenu();
 
-if (!isManualTarget && process.env.FORCE_RUN !== "1" && !isLastDayInVietnam()) {
-  console.log("Not the last day of the month in Asia/Ho_Chi_Minh; skipping.");
-  process.exit(0);
-}
-
-const plan = buildPlan(target);
+const plan = buildRollingPlan();
 
 fs.writeFileSync(outputJsonPath, `${JSON.stringify(plan, null, 2)}\n`);
 fs.writeFileSync(outputMdPath, renderMarkdown(plan));

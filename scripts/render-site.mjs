@@ -44,25 +44,30 @@ function assertNullableString(value, path, errors) {
   }
 }
 
-function assertIsoDate(value, path, errors) {
+function parseIsoDate(value, path, errors) {
   assertString(value, path, errors);
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
     errors.push(`${path} must use YYYY-MM-DD format.`);
-    return;
+    return null;
   }
 
   const date = new Date(`${value}T00:00:00.000Z`);
   if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
     errors.push(`${path} must be a valid calendar date.`);
+    return null;
   }
+
+  return date;
 }
 
-function listWeekdaysInMonth(year, month) {
-  const dates = [];
-  const lastDay = new Date(Date.UTC(year, month, 0, 12, 0, 0)).getUTCDate();
+function assertIsoDate(value, path, errors) {
+  parseIsoDate(value, path, errors);
+}
 
-  for (let day = 1; day <= lastDay; day += 1) {
-    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+function listWeekdaysInRange(startDate, endDate) {
+  const dates = [];
+
+  for (let date = startDate; date <= endDate; date.setUTCDate(date.getUTCDate() + 1)) {
     const weekday = date.getUTCDay();
 
     if (weekday >= 1 && weekday <= 5) {
@@ -77,6 +82,8 @@ function validatePlan(plan) {
   const errors = [];
   const seenDates = new Set();
   let previousPlanDate = null;
+  let rangeStart = null;
+  let rangeEnd = null;
 
   if (!plan || typeof plan !== "object") {
     throw new Error("meal-plan.json must contain an object.");
@@ -91,11 +98,10 @@ function validatePlan(plan) {
     if (Number.isNaN(new Date(metadata.generatedAt).getTime())) {
       errors.push("metadata.generatedAt must be a valid date-time.");
     }
-    if (!Number.isInteger(metadata.month) || metadata.month < 1 || metadata.month > 12) {
-      errors.push("metadata.month must be an integer from 1 to 12.");
-    }
-    if (!Number.isInteger(metadata.year)) {
-      errors.push("metadata.year must be an integer.");
+    rangeStart = parseIsoDate(metadata.startDate, "metadata.startDate", errors);
+    rangeEnd = parseIsoDate(metadata.endDate, "metadata.endDate", errors);
+    if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
+      errors.push("metadata.startDate must not be after metadata.endDate.");
     }
   }
 
@@ -178,13 +184,8 @@ function validatePlan(plan) {
     }
   }
 
-  if (
-    metadata &&
-    typeof metadata === "object" &&
-    Number.isInteger(metadata.month) &&
-    Number.isInteger(metadata.year)
-  ) {
-    const expectedDates = listWeekdaysInMonth(metadata.year, metadata.month);
+  if (rangeStart && rangeEnd) {
+    const expectedDates = listWeekdaysInRange(new Date(rangeStart), new Date(rangeEnd));
     for (const date of expectedDates) {
       if (!seenDates.has(date)) {
         errors.push(`meal-plan.json is missing weekday ${date}.`);
@@ -261,8 +262,21 @@ function renderWeek(week, index) {
   `;
 }
 
+function displayIsoDate(value) {
+  const [year, month, day] = value.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function planPeriod(plan) {
+  return {
+    label: "Giai đoạn",
+    value: `${displayIsoDate(plan.metadata.startDate)} - ${displayIsoDate(plan.metadata.endDate)}`
+  };
+}
+
 function renderHtml(plan) {
   const updatedAt = formatGeneratedAt(plan.metadata.generatedAt);
+  const period = planPeriod(plan);
 
   return `<!doctype html>
 <html lang="vi">
@@ -278,12 +292,12 @@ function renderHtml(plan) {
       <div class="header-copy">
         <p class="eyebrow">Bữa tối gia đình</p>
         <h1>${escapeHtml(plan.metadata.title)}</h1>
-        <p class="header-subtitle">Lịch ăn từ thứ 2 đến thứ 6, tự động cập nhật mỗi tháng.</p>
+        <p class="header-subtitle">Lịch ăn từ thứ 2 đến thứ 6, tự động cập nhật theo chu kỳ 4 tuần.</p>
       </div>
       <div class="header-panel" aria-label="Thông tin kế hoạch">
         <div>
-          <span>Tháng</span>
-          <strong>${String(plan.metadata.month).padStart(2, "0")}/${plan.metadata.year}</strong>
+          <span>${escapeHtml(period.label)}</span>
+          <strong>${escapeHtml(period.value)}</strong>
         </div>
         <div>
           <span>Cập nhật</span>

@@ -11,11 +11,11 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PA
 cd "$REPO_DIR"
 
 if [[ "${DRY_RUN:-0}" == "1" ]]; then
-  echo "Would run deterministic monthly meal planning from $REPO_DIR"
+  echo "Would run deterministic rolling meal planning from $REPO_DIR"
   exit 0
 fi
 
-echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) Running monthly meal planning."
+echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) Running rolling meal planning."
 node scripts/generate-meal-plan.mjs
 node scripts/validate-plan.mjs
 node scripts/render-site.mjs

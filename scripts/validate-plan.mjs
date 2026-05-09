@@ -58,12 +58,10 @@ function parseIsoDate(value) {
   return date;
 }
 
-function listWeekdaysInMonth(year, month) {
+function listWeekdaysInRange(startDate, endDate) {
   const dates = [];
-  const lastDay = new Date(Date.UTC(year, month, 0, 12, 0, 0)).getUTCDate();
 
-  for (let day = 1; day <= lastDay; day += 1) {
-    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+  for (let date = startDate; date <= endDate; date.setUTCDate(date.getUTCDate() + 1)) {
     const weekday = date.getUTCDay();
 
     if (weekday >= 1 && weekday <= 5) {
@@ -78,6 +76,8 @@ function validatePlan(plan) {
   const errors = [];
   const seenDates = new Set();
   let previousPlanDate = null;
+  let rangeStart = null;
+  let rangeEnd = null;
 
   if (!plan || typeof plan !== "object") {
     throw new Error("meal-plan.json must contain an object.");
@@ -96,11 +96,16 @@ function validatePlan(plan) {
   } else if (Number.isNaN(new Date(plan.metadata.generatedAt).getTime())) {
     errors.push("metadata.generatedAt must be a valid date-time.");
   }
-  if (!Number.isInteger(plan.metadata.month) || plan.metadata.month < 1 || plan.metadata.month > 12) {
-    errors.push("metadata.month must be an integer from 1 to 12.");
+  rangeStart = parseIsoDate(plan.metadata.startDate);
+  rangeEnd = parseIsoDate(plan.metadata.endDate);
+  if (!rangeStart) {
+    errors.push("metadata.startDate must be a valid YYYY-MM-DD date.");
   }
-  if (!Number.isInteger(plan.metadata.year)) {
-    errors.push("metadata.year must be an integer.");
+  if (!rangeEnd) {
+    errors.push("metadata.endDate must be a valid YYYY-MM-DD date.");
+  }
+  if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
+    errors.push("metadata.startDate must not be after metadata.endDate.");
   }
   if (!Array.isArray(plan.weeks)) {
     throw new Error("meal-plan.json weeks must be an array.");
@@ -177,11 +182,11 @@ function validatePlan(plan) {
         errors.push(`${dayLabel}.weekday does not match ${day.date}.`);
       }
       if (
-        Number.isInteger(plan.metadata.month) &&
-        Number.isInteger(plan.metadata.year) &&
-        (date.getUTCMonth() + 1 !== plan.metadata.month || date.getUTCFullYear() !== plan.metadata.year)
+        rangeStart &&
+        rangeEnd &&
+        (date < rangeStart || date > rangeEnd)
       ) {
-        errors.push(`${dayLabel}.date is outside the metadata target month.`);
+        errors.push(`${dayLabel}.date is outside the metadata date range.`);
       }
 
       const lunar = solarToLunar(date.getUTCDate(), date.getUTCMonth() + 1, date.getUTCFullYear());
@@ -227,8 +232,8 @@ function validatePlan(plan) {
     }
   }
 
-  if (Number.isInteger(plan.metadata.month) && Number.isInteger(plan.metadata.year)) {
-    const expectedDates = listWeekdaysInMonth(plan.metadata.year, plan.metadata.month);
+  if (rangeStart && rangeEnd) {
+    const expectedDates = listWeekdaysInRange(new Date(rangeStart), new Date(rangeEnd));
     for (const date of expectedDates) {
       if (!seenDates.has(date)) {
         errors.push(`meal-plan.json is missing weekday ${date}.`);
