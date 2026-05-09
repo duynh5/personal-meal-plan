@@ -13,6 +13,14 @@
   --red: #9b4d43;
   --red-soft: #f6e8e5;
   --gold: #9b6b25;
+  --breakfast: #2f6f56;
+  --breakfast-soft: #e8f3ed;
+  --dinner: #8f4b3f;
+  --dinner-soft: #f6e7e3;
+  --soup: #2d6d86;
+  --soup-soft: #e6f1f5;
+  --side: #84651d;
+  --side-soft: #f3edda;
   --shadow: 0 18px 50px rgba(50, 42, 31, 0.1);
 }
 
@@ -56,6 +64,7 @@ a {
 .header-copy h1 {
   max-width: 780px;
   margin: 4px 0 10px;
+  overflow-wrap: anywhere;
   font-size: clamp(2rem, 5vw, 4.6rem);
   line-height: 0.96;
   letter-spacing: 0;
@@ -91,6 +100,7 @@ a {
   display: flex;
   justify-content: space-between;
   gap: 18px;
+  min-width: 0;
   border-bottom: 1px solid var(--line);
   padding-bottom: 12px;
 }
@@ -108,6 +118,8 @@ a {
 }
 
 .header-panel strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
   text-align: right;
 }
 
@@ -284,21 +296,39 @@ a:focus-visible {
 
 .meal-list {
   display: grid;
-  gap: 12px;
+  gap: 8px;
   margin: 10px 0 0;
 }
 
-.meal-list div {
-  border-top: 1px solid var(--line);
-  padding-top: 10px;
+.meal-list__item {
+  border-left: 5px solid var(--meal-color);
+  border-radius: 8px;
+  padding: 9px 10px 10px 12px;
+  background: var(--meal-bg);
 }
 
-.meal-list__breakfast dd {
-  color: var(--green);
+.meal-list__breakfast {
+  --meal-color: var(--breakfast);
+  --meal-bg: var(--breakfast-soft);
+}
+
+.meal-list__dinner {
+  --meal-color: var(--dinner);
+  --meal-bg: var(--dinner-soft);
+}
+
+.meal-list__soup {
+  --meal-color: var(--soup);
+  --meal-bg: var(--soup-soft);
+}
+
+.meal-list__side {
+  --meal-color: var(--side);
+  --meal-bg: var(--side-soft);
 }
 
 .meal-list dt {
-  color: var(--red);
+  color: var(--meal-color);
   font-size: 0.75rem;
   font-weight: 900;
   text-transform: uppercase;
@@ -306,6 +336,7 @@ a:focus-visible {
 
 .meal-list dd {
   margin: 2px 0 0;
+  color: var(--ink);
   font-size: 1rem;
   font-weight: 750;
 }
@@ -328,7 +359,17 @@ a:focus-visible {
   }
 
   .header-copy h1 {
-    font-size: 2.5rem;
+    font-size: 2rem;
+    line-height: 1.02;
+  }
+
+  .header-panel div {
+    display: grid;
+    gap: 4px;
+  }
+
+  .header-panel strong {
+    text-align: left;
   }
 
   .week-heading,

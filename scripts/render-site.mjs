@@ -47,22 +47,22 @@ function renderDay(day) {
         <div class="day-card__tags">${tags.join("")}</div>
       </div>
       <dl class="meal-list">
-        <div class="meal-list__breakfast">
+        <div class="meal-list__item meal-list__breakfast">
           <dt>Bữa sáng</dt>
           <dd>${escapeHtml(day.breakfast)}</dd>
         </div>
-        <div>
+        <div class="meal-list__item meal-list__dinner">
           <dt>Bữa tối</dt>
           <dd>${escapeHtml(day.main)}</dd>
         </div>
         ${
           day.soup
-            ? `<div><dt>Canh</dt><dd>${escapeHtml(day.soup)}</dd></div>`
+            ? `<div class="meal-list__item meal-list__soup"><dt>Canh</dt><dd>${escapeHtml(day.soup)}</dd></div>`
             : ""
         }
         ${
           day.side
-            ? `<div><dt>Xào/luộc</dt><dd>${escapeHtml(day.side)}</dd></div>`
+            ? `<div class="meal-list__item meal-list__side"><dt>Xào/luộc</dt><dd>${escapeHtml(day.side)}</dd></div>`
             : ""
         }
       </dl>
