@@ -9,15 +9,21 @@ const todayCard = document.querySelector(`[data-date="${today}"]`);
 const status = document.querySelector("#today-status");
 const printButton = document.querySelector("#print-button");
 
-if (todayCard) {
+if (status && todayCard) {
+  const weekday = todayCard.querySelector(".day-card__weekday");
+  const dateHeading = todayCard.querySelector("h3");
+
   todayCard.classList.add("is-today");
-  status.textContent = `Hôm nay: ${todayCard.querySelector(".day-card__weekday").textContent}, ${
-    todayCard.querySelector("h3").textContent
-  }`;
-} else {
+  status.textContent =
+    weekday && dateHeading
+      ? `Hôm nay: ${weekday.textContent}, ${dateHeading.textContent}`
+      : "Hôm nay có trong lịch ăn tháng này.";
+} else if (status) {
   status.textContent = "Hôm nay không nằm trong lịch ăn tháng này.";
 }
 
-printButton.addEventListener("click", () => {
-  window.print();
-});
+if (printButton) {
+  printButton.addEventListener("click", () => {
+    window.print();
+  });
+}

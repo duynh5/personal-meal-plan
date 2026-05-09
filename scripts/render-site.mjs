@@ -9,6 +9,12 @@ const siteAssetsDir = path.join(siteDir, "assets");
 const planPath = path.join(rootDir, "meal-plan.json");
 const cssPath = path.join(rootDir, "assets", "site.css");
 const jsPath = path.join(rootDir, "assets", "site.js");
+const allowedGroups = new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]);
+const allowedStarches = new Set(["rice", "noodle", "porridge"]);
+
+function toIsoDate(date) {
+  return date.toISOString().slice(0, 10);
+}
 
 function escapeHtml(value) {
   return String(value)
@@ -24,6 +30,176 @@ function formatGeneratedAt(value) {
     dateStyle: "medium",
     timeStyle: "short"
   }).format(new Date(value));
+}
+
+function assertString(value, path, errors) {
+  if (typeof value !== "string" || value.trim() === "") {
+    errors.push(`${path} must be a non-empty string.`);
+  }
+}
+
+function assertNullableString(value, path, errors) {
+  if (value !== null && (typeof value !== "string" || value.trim() === "")) {
+    errors.push(`${path} must be null or a non-empty string.`);
+  }
+}
+
+function assertIsoDate(value, path, errors) {
+  assertString(value, path, errors);
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    errors.push(`${path} must use YYYY-MM-DD format.`);
+    return;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) {
+    errors.push(`${path} must be a valid calendar date.`);
+  }
+}
+
+function listWeekdaysInMonth(year, month) {
+  const dates = [];
+  const lastDay = new Date(Date.UTC(year, month, 0, 12, 0, 0)).getUTCDate();
+
+  for (let day = 1; day <= lastDay; day += 1) {
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    const weekday = date.getUTCDay();
+
+    if (weekday >= 1 && weekday <= 5) {
+      dates.push(toIsoDate(date));
+    }
+  }
+
+  return dates;
+}
+
+function validatePlan(plan) {
+  const errors = [];
+  const seenDates = new Set();
+  let previousPlanDate = null;
+
+  if (!plan || typeof plan !== "object") {
+    throw new Error("meal-plan.json must contain an object.");
+  }
+
+  const metadata = plan.metadata;
+  if (!metadata || typeof metadata !== "object") {
+    errors.push("metadata must be an object.");
+  } else {
+    assertString(metadata.title, "metadata.title", errors);
+    assertString(metadata.generatedAt, "metadata.generatedAt", errors);
+    if (Number.isNaN(new Date(metadata.generatedAt).getTime())) {
+      errors.push("metadata.generatedAt must be a valid date-time.");
+    }
+    if (!Number.isInteger(metadata.month) || metadata.month < 1 || metadata.month > 12) {
+      errors.push("metadata.month must be an integer from 1 to 12.");
+    }
+    if (!Number.isInteger(metadata.year)) {
+      errors.push("metadata.year must be an integer.");
+    }
+  }
+
+  if (!Array.isArray(plan.weeks) || plan.weeks.length === 0) {
+    errors.push("weeks must be a non-empty array.");
+  } else {
+    for (const [weekIndex, week] of plan.weeks.entries()) {
+      const weekPath = `weeks[${weekIndex}]`;
+      if (!week || typeof week !== "object") {
+        errors.push(`${weekPath} must be an object.`);
+        continue;
+      }
+
+      assertString(week.startDate, `${weekPath}.startDate`, errors);
+      assertString(week.endDate, `${weekPath}.endDate`, errors);
+      if (!Array.isArray(week.notes)) {
+        errors.push(`${weekPath}.notes must be an array.`);
+      } else {
+        for (const [noteIndex, note] of week.notes.entries()) {
+          assertString(note, `${weekPath}.notes[${noteIndex}]`, errors);
+        }
+      }
+      if (!Array.isArray(week.days) || week.days.length === 0) {
+        errors.push(`${weekPath}.days must be a non-empty array.`);
+        continue;
+      }
+      const firstDay = week.days[0];
+      const lastDay = week.days[week.days.length - 1];
+
+      if (firstDay && week.startDate !== firstDay.displayDate) {
+        errors.push(`${weekPath}.startDate must match the first day displayDate.`);
+      }
+      if (lastDay && week.endDate !== lastDay.displayDate) {
+        errors.push(`${weekPath}.endDate must match the last day displayDate.`);
+      }
+      if (firstDay && lastDay && week.title !== `Tuần ${firstDay.displayDate} - ${lastDay.displayDate}`) {
+        errors.push(`${weekPath}.title must match the week date range.`);
+      }
+
+      for (const [dayIndex, day] of week.days.entries()) {
+        const dayPath = `${weekPath}.days[${dayIndex}]`;
+        if (!day || typeof day !== "object") {
+          errors.push(`${dayPath} must be an object.`);
+          continue;
+        }
+
+        assertIsoDate(day.date, `${dayPath}.date`, errors);
+        if (typeof day.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day.date)) {
+          if (seenDates.has(day.date)) {
+            errors.push(`${dayPath}.date duplicates ${day.date}.`);
+          }
+          seenDates.add(day.date);
+          if (previousPlanDate && day.date <= previousPlanDate) {
+            errors.push(`${dayPath}.date must be later than the previous planned day.`);
+          }
+          previousPlanDate = day.date;
+        }
+        for (const field of ["displayDate", "weekday", "lunarDate", "main", "groupLabel"]) {
+          assertString(day[field], `${dayPath}.${field}`, errors);
+        }
+        if (!allowedGroups.has(day.group)) {
+          errors.push(`${dayPath}.group must be one of: ${[...allowedGroups].join(", ")}.`);
+        }
+        if (!allowedStarches.has(day.starch)) {
+          errors.push(`${dayPath}.starch must be one of: ${[...allowedStarches].join(", ")}.`);
+        }
+        for (const field of ["soup", "side"]) {
+          assertNullableString(day[field], `${dayPath}.${field}`, errors);
+        }
+        if (day.starch === "rice" && day.vegetarianDay !== true && (!day.soup || !day.side)) {
+          errors.push(`${dayPath} rice meal must include soup and side.`);
+        }
+        if ((day.starch !== "rice" || day.vegetarianDay === true) && (day.soup || day.side)) {
+          errors.push(`${dayPath} non-rice or vegetarian meal must not include soup or side.`);
+        }
+        if (typeof day.vegetarianDay !== "boolean") {
+          errors.push(`${dayPath}.vegetarianDay must be a boolean.`);
+        }
+      }
+    }
+  }
+
+  if (
+    metadata &&
+    typeof metadata === "object" &&
+    Number.isInteger(metadata.month) &&
+    Number.isInteger(metadata.year)
+  ) {
+    const expectedDates = listWeekdaysInMonth(metadata.year, metadata.month);
+    for (const date of expectedDates) {
+      if (!seenDates.has(date)) {
+        errors.push(`meal-plan.json is missing weekday ${date}.`);
+      }
+    }
+    for (const date of seenDates) {
+      if (!expectedDates.includes(date)) {
+        errors.push(`meal-plan.json includes unexpected date ${date}.`);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Invalid meal plan data:\n- ${errors.join("\n- ")}`);
+  }
 }
 
 function renderDay(day) {
@@ -147,6 +323,7 @@ function renderHtml(plan) {
 }
 
 const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+validatePlan(plan);
 
 fs.mkdirSync(siteAssetsDir, { recursive: true });
 fs.writeFileSync(path.join(siteDir, "index.html"), renderHtml(plan));

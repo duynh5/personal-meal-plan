@@ -18,6 +18,7 @@ const groupLabels = {
   chickenEgg: "Gà/trứng",
   vegetarian: "Chay"
 };
+const allowedStarches = new Set(["rice", "noodle", "porridge"]);
 const fullWeekPatterns = [
   [
     ["fish", "rice"],
@@ -101,8 +102,8 @@ function validateMenu() {
     if (!allowedGroups.has(dish.group)) {
       errors.push(`${label}.group must be one of: ${[...allowedGroups].join(", ")}.`);
     }
-    if (typeof dish.starch !== "string" || dish.starch.trim() === "") {
-      errors.push(`${label}.starch must be a non-empty string.`);
+    if (!allowedStarches.has(dish.starch)) {
+      errors.push(`${label}.starch must be one of: ${[...allowedStarches].join(", ")}.`);
     }
   }
 
@@ -292,7 +293,7 @@ function buildDay(date, weekIndex, usedNames) {
 
   usedNames.add(dish.name);
 
-  const hasRiceSides = !vegetarianDay && dish.name.startsWith("cơm ");
+  const hasRiceSides = !vegetarianDay && dish.starch === "rice";
   return {
     date: toIsoDate(date),
     displayDate: toDisplayDate(date),

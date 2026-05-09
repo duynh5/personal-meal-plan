@@ -31,6 +31,9 @@ jobs:
       - name: Generate monthly plan
         run: node scripts/generate-meal-plan.mjs
 
+      - name: Validate monthly plan
+        run: node scripts/validate-plan.mjs
+
       - name: Render Pages site
         run: node scripts/render-site.mjs
 

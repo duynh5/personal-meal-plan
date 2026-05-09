@@ -6,6 +6,7 @@ Dự án lập kế hoạch bữa cơm tối gia đình và publish thành trang
 
 - Món ăn nằm trong `data/menu.json`; không chép danh sách món vào hướng dẫn này.
 - Script sinh kế hoạch tháng: `scripts/generate-meal-plan.mjs`.
+- Script kiểm tra kế hoạch tháng: `scripts/validate-plan.mjs`.
 - Script đổi dương lịch sang âm lịch Việt Nam: `scripts/lunar.mjs`.
 - Script render giao diện chia sẻ: `scripts/render-site.mjs`, xuất ra `site/`.
 - GitHub Actions chạy workflow `.github/workflows/monthly-plan.yml`; GitHub Pages publish thư mục `site/`.
@@ -41,9 +42,11 @@ Dự án lập kế hoạch bữa cơm tối gia đình và publish thành trang
 
 - Chạy local:
   - `TARGET_MONTH=2026-06 node scripts/generate-meal-plan.mjs`
+  - `node scripts/validate-plan.mjs`
   - `node scripts/render-site.mjs`
 - Chạy tự động:
   - Workflow chạy lúc 08:00 giờ Việt Nam trong các ngày 28-31 hằng tháng.
   - Script chỉ ghi kế hoạch mới khi ngày hiện tại là ngày cuối tháng theo `Asia/Ho_Chi_Minh`.
+  - Workflow kiểm tra `meal-plan.json` trước khi render site.
   - Workflow commit lại `meal-plan.md`, `meal-plan.json`, và `site/`.
 - `scripts/plan-next-month.sh` chỉ là dự phòng local, không phải nguồn tự động hóa chính.

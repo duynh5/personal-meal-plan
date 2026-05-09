@@ -6,6 +6,7 @@ Du an lap ke hoach bua toi gia dinh va publish thanh trang GitHub Pages.
 
 ```sh
 TARGET_MONTH=2026-06 node scripts/generate-meal-plan.mjs
+node scripts/validate-plan.mjs
 node scripts/render-site.mjs
 ```
 
@@ -15,6 +16,7 @@ Mo `site/index.html` de xem giao dien local.
 
 - `.github/workflows/monthly-plan.yml` chay luc 08:00 gio Viet Nam trong cac ngay 28-31 hang thang.
 - Script chi sinh ke hoach khi do la ngay cuoi thang theo `Asia/Ho_Chi_Minh`.
+- Workflow validate `meal-plan.json` truoc khi render site.
 - Workflow commit lai `meal-plan.md`, `meal-plan.json`, va `site/`.
 - `.github/workflows/pages.yml` publish thu muc `site/` len GitHub Pages.
 
