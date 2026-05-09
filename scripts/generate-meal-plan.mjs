@@ -11,7 +11,6 @@ const outputMdPath = path.join(rootDir, "meal-plan.md");
 const timeZone = "Asia/Ho_Chi_Minh";
 const vietnamUtcOffset = 7;
 
-const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
 const weekdayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const groupLabels = {
   fish: "Cá",
@@ -35,6 +34,7 @@ const fullWeekPatterns = [
     ["fish", "rice"]
   ]
 ];
+const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
 
 function pad(number) {
   return String(number).padStart(2, "0");
@@ -56,6 +56,80 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setUTCDate(next.getUTCDate() + days);
   return next;
+}
+
+function validateTargetMonth({ year, month }, source) {
+  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
+    throw new Error(`Invalid target month${source ? ` from ${source}` : ""}: ${year}-${pad(month)}.`);
+  }
+}
+
+function validateMenu() {
+  const errors = [];
+  const allowedGroups = new Set(Object.keys(groupLabels));
+  const requiredGroupStarches = new Set(
+    fullWeekPatterns.flat().map(([group, starch]) => `${group}:${starch}`)
+  );
+  const mains = Array.isArray(menu.mains) ? menu.mains : [];
+  const soups = Array.isArray(menu.soups) ? menu.soups : [];
+  const sides = Array.isArray(menu.sides) ? menu.sides : [];
+
+  if (!Array.isArray(menu.mains) || menu.mains.length === 0) {
+    errors.push("data/menu.json must include a non-empty mains array.");
+  }
+  if (!Array.isArray(menu.soups) || menu.soups.length === 0) {
+    errors.push("data/menu.json must include a non-empty soups array.");
+  }
+  if (!Array.isArray(menu.sides) || menu.sides.length === 0) {
+    errors.push("data/menu.json must include a non-empty sides array.");
+  }
+
+  const mainNames = new Set();
+  for (const [index, dish] of mains.entries()) {
+    const label = `mains[${index}]`;
+    if (!dish || typeof dish !== "object") {
+      errors.push(`${label} must be an object.`);
+      continue;
+    }
+    if (typeof dish.name !== "string" || dish.name.trim() === "") {
+      errors.push(`${label}.name must be a non-empty string.`);
+    } else if (mainNames.has(dish.name)) {
+      errors.push(`${label}.name duplicates "${dish.name}".`);
+    } else {
+      mainNames.add(dish.name);
+    }
+    if (!allowedGroups.has(dish.group)) {
+      errors.push(`${label}.group must be one of: ${[...allowedGroups].join(", ")}.`);
+    }
+    if (typeof dish.starch !== "string" || dish.starch.trim() === "") {
+      errors.push(`${label}.starch must be a non-empty string.`);
+    }
+  }
+
+  for (const key of requiredGroupStarches) {
+    const [group, starch] = key.split(":");
+    if (!mains.some((dish) => dish.group === group && dish.starch === starch)) {
+      errors.push(`data/menu.json needs at least one ${group} main with starch "${starch}".`);
+    }
+  }
+  if (!mains.some((dish) => dish.group === "vegetarian")) {
+    errors.push("data/menu.json needs at least one vegetarian main.");
+  }
+
+  for (const [field, items] of [
+    ["soups", soups],
+    ["sides", sides]
+  ]) {
+    for (const [index, item] of items.entries()) {
+      if (typeof item !== "string" || item.trim() === "") {
+        errors.push(`${field}[${index}] must be a non-empty string.`);
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Invalid menu data:\n- ${errors.join("\n- ")}`);
+  }
 }
 
 function getVietnamDateParts(date = new Date()) {
@@ -85,17 +159,23 @@ function parseTargetMonth(value) {
   const trimmed = value.trim();
   let match = trimmed.match(/^(\d{4})-(\d{2})$/);
   if (match) {
-    return { year: Number(match[1]), month: Number(match[2]) };
+    const target = { year: Number(match[1]), month: Number(match[2]) };
+    validateTargetMonth(target, value);
+    return target;
   }
 
   match = trimmed.match(/^(\d{2})\/(\d{4})$/);
   if (match) {
-    return { year: Number(match[2]), month: Number(match[1]) };
+    const target = { year: Number(match[2]), month: Number(match[1]) };
+    validateTargetMonth(target, value);
+    return target;
   }
 
   match = trimmed.match(/^(\d{4})\/(\d{2})$/);
   if (match) {
-    return { year: Number(match[1]), month: Number(match[2]) };
+    const target = { year: Number(match[1]), month: Number(match[2]) };
+    validateTargetMonth(target, value);
+    return target;
   }
 
   throw new Error(`Unsupported TARGET_MONTH format: ${value}. Use YYYY-MM or MM/YYYY.`);
@@ -212,7 +292,7 @@ function buildDay(date, weekIndex, usedNames) {
 
   usedNames.add(dish.name);
 
-  const hasRiceSides = dish.name.startsWith("cơm ");
+  const hasRiceSides = !vegetarianDay && dish.name.startsWith("cơm ");
   return {
     date: toIsoDate(date),
     displayDate: toDisplayDate(date),
@@ -300,6 +380,8 @@ function renderMarkdown(plan) {
 const inputTarget = process.env.TARGET_MONTH || process.argv[2] || "";
 const target = parseTargetMonth(inputTarget) ?? nextMonthFromVietnamDate();
 const isManualTarget = Boolean(inputTarget);
+validateTargetMonth(target);
+validateMenu();
 
 if (!isManualTarget && process.env.FORCE_RUN !== "1" && !isLastDayInVietnam()) {
   console.log("Not the last day of the month in Asia/Ho_Chi_Minh; skipping.");
