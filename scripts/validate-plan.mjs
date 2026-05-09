@@ -208,6 +208,9 @@ export function validatePlan(plan) {
   } else if (!isValidDateTime(plan.metadata.generatedAt)) {
     errors.push("metadata.generatedAt must be a valid date-time.");
   }
+  if (Object.hasOwn(plan.metadata, "planVariant") && !isNonEmptyString(plan.metadata.planVariant)) {
+    errors.push("metadata.planVariant must be a non-empty string when present.");
+  }
   rangeStart = parseIsoDate(plan.metadata.startDate);
   rangeEnd = parseIsoDate(plan.metadata.endDate);
   if (!rangeStart) {

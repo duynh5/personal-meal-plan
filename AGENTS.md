@@ -9,8 +9,10 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 - Script kiểm tra kế hoạch 4 tuần: `scripts/validate-plan.mjs`.
 - Script đổi dương lịch sang âm lịch Việt Nam: `scripts/lunar.mjs`.
 - Script render giao diện chia sẻ: `scripts/render-site.mjs`, xuất ra `site/`.
+- Cấu hình biến thể kế hoạch nằm trong `data/plan-config.json`.
 - GitHub Actions chạy workflow `.github/workflows/rolling-plan.yml`; GitHub Pages publish thư mục `site/`.
 - Khi `meal-plan.json` đã tồn tại, script sinh kế hoạch dùng tuần liền trước trong file này làm ngữ cảnh để tránh lặp món ở tuần đầu kế hoạch mới.
+- Có thể đổi `mealPlanVariant` trong `data/plan-config.json` để tạo biến thể kế hoạch khác nhưng vẫn ổn định với cùng ngày chạy, menu, và giá trị biến thể.
 
 ## Quy Tắc Lập Kế Hoạch
 
@@ -47,6 +49,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 
 - Chạy local:
   - `node scripts/generate-meal-plan.mjs`
+  - `MEAL_PLAN_VARIANT=ten-bien-the node scripts/generate-meal-plan.mjs` để ghi đè tạm thời biến thể trong config.
   - `node scripts/validate-plan.mjs`
   - `node --test scripts/*.test.mjs`
   - `node scripts/render-site.mjs`

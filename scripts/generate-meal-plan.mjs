@@ -2,17 +2,21 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import { readPlanConfig } from "./plan-config.mjs";
 import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(scriptPath);
 const rootDir = path.resolve(__dirname, "..");
+const planConfigPath = path.join(rootDir, "data", "plan-config.json");
 const menuPath = path.join(rootDir, "data", "menu.json");
 const outputJsonPath = path.join(rootDir, "meal-plan.json");
 const outputMdPath = path.join(rootDir, "meal-plan.md");
 const timeZone = "Asia/Ho_Chi_Minh";
 const vietnamUtcOffset = 7;
 const rollingWeekCount = 4;
+const planConfig = readPlanConfig(planConfigPath);
+const defaultPlanVariant = process.env.MEAL_PLAN_VARIANT ?? planConfig.mealPlanVariant;
 
 const weekdayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const groupLabels = {
@@ -221,6 +225,19 @@ function rotateIndex(seed, length) {
   return Math.abs(seed) % length;
 }
 
+function seedOffsetFor(value) {
+  if (value === undefined || value === null || value === "") {
+    return 0;
+  }
+
+  let hash = 0;
+  for (const character of String(value)) {
+    hash = (hash * 31 + character.charCodeAt(0)) % 2147483647;
+  }
+
+  return hash;
+}
+
 function chooseRotatedOption(options, seed, isAllowed, isPreferred) {
   const start = rotateIndex(seed, options.length);
 
@@ -320,9 +337,9 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
   return chooseRotatedOption(options, seed, isAllowed, isPreferred);
 }
 
-function buildDay(date, weekIndex, weekDishes, previousWeekDishes) {
+function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes) {
   const weekdayIndex = date.getUTCDay() - 1;
-  const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
+  const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
   const breakfast = chooseBreakfast(seed + weekIndex * 11, weekDishes.breakfasts, previousWeekDishes.breakfasts);
   const vegetarianDay = isVegetarianLunarDay(date);
   const pattern = fullWeekPatterns[weekIndex % fullWeekPatterns.length];
@@ -361,13 +378,13 @@ function buildDay(date, weekIndex, weekDishes, previousWeekDishes) {
   };
 }
 
-function buildPlanFromDays(days, metadata, initialPreviousWeekDishes = createWeekDishes()) {
+function buildPlanFromDays(days, metadata, seedOffset, initialPreviousWeekDishes = createWeekDishes()) {
   const weeks = [];
   let previousWeekDishes = initialPreviousWeekDishes;
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
     const weekDishes = createWeekDishes();
-    const days = week.days.map((date) => buildDay(date, weekIndex, weekDishes, previousWeekDishes));
+    const days = week.days.map((date) => buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes));
     const vegetarianDays = days.filter((day) => day.vegetarianDay);
     const notes = [];
 
@@ -412,14 +429,17 @@ export function buildRollingPlan(runDate = new Date(), options = {}) {
     listWeekdaysInRange(addDays(startDate, -7), addDays(startDate, -1)).map(toIsoDate)
   );
   const previousWeekDishes = previousWeekDishesFromPlan(options?.previousPlan, previousWeekDates);
+  const planVariant = options?.planVariant ?? defaultPlanVariant;
+  const seedOffset = seedOffsetFor(planVariant);
 
   return buildPlanFromDays(days, {
     title: `Kế hoạch ăn 4 tuần từ ${toDisplayDate(startDate)}`,
     startDate: toIsoDate(startDate),
     endDate: toIsoDate(endDate),
     timezone: timeZone,
-    generatedAt: runDate.toISOString()
-  }, previousWeekDishes);
+    generatedAt: runDate.toISOString(),
+    ...(planVariant ? { planVariant: String(planVariant) } : {})
+  }, seedOffset, previousWeekDishes);
 }
 
 function renderMarkdown(plan) {
@@ -460,7 +480,10 @@ if (process.argv[1] === scriptPath) {
     }
   }
 
-  const plan = buildRollingPlan(new Date(), { previousPlan });
+  const plan = buildRollingPlan(new Date(), {
+    previousPlan,
+    planVariant: defaultPlanVariant
+  });
 
   fs.writeFileSync(outputJsonPath, `${JSON.stringify(plan, null, 2)}\n`);
   fs.writeFileSync(outputMdPath, renderMarkdown(plan));

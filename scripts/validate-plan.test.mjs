@@ -55,6 +55,13 @@ describe("validatePlan", () => {
     assertValidationError(plan, /metadata\.generatedAt must be a valid date-time/);
   });
 
+  it("rejects blank plan variant metadata", () => {
+    const plan = clonePlan();
+    plan.metadata.planVariant = " ";
+
+    assertValidationError(plan, /metadata\.planVariant must be a non-empty string/);
+  });
+
   it("rejects a title that does not match the start date", () => {
     const plan = clonePlan();
     plan.metadata.title = "Kế hoạch ăn 4 tuần từ 12/05/2026";

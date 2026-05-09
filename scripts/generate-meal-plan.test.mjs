@@ -84,6 +84,19 @@ describe("buildRollingPlan", () => {
     }
   });
 
+  it("uses a stable variant input to change deterministic choices", () => {
+    const runDate = new Date("2026-05-09T01:00:00.000Z");
+    const defaultPlan = buildRollingPlan(runDate, { planVariant: "" });
+    const variantPlan = buildRollingPlan(runDate, { planVariant: "alt-1" });
+    const repeatedVariantPlan = buildRollingPlan(runDate, { planVariant: "alt-1" });
+
+    assert.equal(variantPlan.metadata.planVariant, "alt-1");
+    assert.notDeepEqual(variantPlan.weeks[0].days, defaultPlan.weeks[0].days);
+    assert.notEqual(variantPlan.weeks[0].days[0].main, defaultPlan.weeks[0].days[0].main);
+    assert.deepEqual(variantPlan.weeks[0].days, repeatedVariantPlan.weeks[0].days);
+    assert.doesNotThrow(() => validatePlan(variantPlan));
+  });
+
   it("avoids previous-week dishes when category alternatives exist", () => {
     const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"));
 
