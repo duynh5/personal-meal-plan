@@ -1,0 +1,47 @@
+name: Monthly meal plan
+
+on:
+  schedule:
+    - cron: "0 1 28-31 * *"
+  workflow_dispatch:
+    inputs:
+      target_month:
+        description: "Target month, for example 2026-06. Leave blank for next month."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    env:
+      TARGET_MONTH: ${{ inputs.target_month }}
+      FORCE_RUN: ${{ github.event_name == 'workflow_dispatch' && '1' || '0' }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Generate monthly plan
+        run: node scripts/generate-meal-plan.mjs
+
+      - name: Render Pages site
+        run: node scripts/render-site.mjs
+
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then
+            echo "No meal plan changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add meal-plan.md meal-plan.json site
+          git commit -m "feat: update monthly meal plan"
+          git push
