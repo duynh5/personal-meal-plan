@@ -5,6 +5,7 @@ import { buildRollingPlan } from "./generate-meal-plan.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const validPlan = JSON.parse(fs.readFileSync(new URL("../meal-plan.json", import.meta.url), "utf8"));
+const menu = JSON.parse(fs.readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
 
 function clonePlan() {
   return structuredClone(validPlan);
@@ -89,6 +90,13 @@ describe("validatePlan", () => {
     assertValidationError(plan, /breakfast repeats ".+" in the same week/);
   });
 
+  it("rejects avoidable breakfast repeats from the previous week", () => {
+    const plan = clonePlan();
+    plan.weeks[1].days[0].breakfast = plan.weeks[0].days[0].breakfast;
+
+    assertValidationError(plan, /breakfast repeats ".+" from the previous week/);
+  });
+
   it("rejects dishes that are not in the menu source data", () => {
     const plan = clonePlan();
     plan.weeks[0].days[0].main = "cơm cá không có trong menu";
@@ -96,11 +104,59 @@ describe("validatePlan", () => {
     assertValidationError(plan, /main must exist in data\/menu\.json/);
   });
 
+  it("rejects avoidable main repeats from the previous week", () => {
+    const plan = clonePlan();
+    Object.assign(plan.weeks[1].days[0], {
+      main: plan.weeks[0].days[4].main,
+      group: plan.weeks[0].days[4].group,
+      groupLabel: plan.weeks[0].days[4].groupLabel,
+      starch: plan.weeks[0].days[4].starch
+    });
+
+    assertValidationError(plan, /main repeats ".+" from the previous week/);
+  });
+
+  it("accepts unavoidable main repeats from the previous week", () => {
+    const plan = clonePlan();
+    const fishNoodleMains = menu.mains.filter((dish) => dish.group === "fish" && dish.starch === "noodle");
+
+    assert.deepEqual(fishNoodleMains.map((dish) => dish.name), ["bánh canh cá"]);
+    assert.equal(plan.weeks[0].days[3].main, "bánh canh cá");
+    assert.equal(plan.weeks[1].days[1].main, "bánh canh cá");
+    assert.doesNotThrow(() => validatePlan(plan));
+  });
+
+  it("does not let fallback bypass same-week main duplicate rules", () => {
+    const plan = clonePlan();
+    Object.assign(plan.weeks[0].days[1], {
+      main: plan.weeks[0].days[4].main,
+      group: plan.weeks[0].days[4].group,
+      groupLabel: plan.weeks[0].days[4].groupLabel,
+      starch: plan.weeks[0].days[4].starch
+    });
+
+    assertValidationError(plan, /repeats ".+" in the same week/);
+  });
+
   it("rejects side dishes that are not in the menu source data", () => {
     const plan = clonePlan();
     plan.weeks[0].days[0].side = "rau không có trong menu";
 
     assertValidationError(plan, /side must exist in data\/menu\.json/);
+  });
+
+  it("rejects avoidable soup repeats from the previous week", () => {
+    const plan = clonePlan();
+    plan.weeks[1].days[0].soup = plan.weeks[0].days[0].soup;
+
+    assertValidationError(plan, /soup repeats ".+" from the previous week/);
+  });
+
+  it("rejects avoidable side repeats from the previous week", () => {
+    const plan = clonePlan();
+    plan.weeks[1].days[0].side = plan.weeks[0].days[0].side;
+
+    assertValidationError(plan, /side repeats ".+" from the previous week/);
   });
 
   it("keeps non-vegetarian weekly group caps when a vegetarian meal is present", () => {

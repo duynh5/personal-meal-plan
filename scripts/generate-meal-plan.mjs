@@ -220,24 +220,36 @@ function rotateIndex(seed, length) {
   return Math.abs(seed) % length;
 }
 
-function findDish(group, starch, seed, usedNames) {
+function chooseRotatedOption(options, seed, isAllowed, isPreferred) {
+  const start = rotateIndex(seed, options.length);
+
+  for (let offset = 0; offset < options.length; offset += 1) {
+    const option = options[(start + offset) % options.length];
+
+    if (isAllowed(option) && isPreferred(option)) {
+      return option;
+    }
+  }
+
+  for (let offset = 0; offset < options.length; offset += 1) {
+    const option = options[(start + offset) % options.length];
+
+    if (isAllowed(option)) {
+      return option;
+    }
+  }
+
+  return null;
+}
+
+function mainOptionsFor(group, starch) {
   let options = menu.mains.filter((dish) => dish.group === group && dish.starch === starch);
 
   if (options.length === 0) {
     options = menu.mains.filter((dish) => dish.group === group);
   }
 
-  const start = rotateIndex(seed, options.length);
-  for (let offset = 0; offset < options.length; offset += 1) {
-    const dish = options[(start + offset) % options.length];
-    const duplicateRestricted = group === "beefPork" || group === "chickenEgg";
-
-    if (!duplicateRestricted || !usedNames.has(dish.name)) {
-      return dish;
-    }
-  }
-
-  return options[start];
+  return options;
 }
 
 function isVegetarianLunarDay(date) {
@@ -251,47 +263,96 @@ function isVegetarianLunarDay(date) {
   return lunar.day === 1 || lunar.day === 15;
 }
 
-function chooseVegetarianDish(starch, seed) {
-  let dishes = menu.mains.filter((dish) => dish.group === "vegetarian" && dish.starch === starch);
-  if (dishes.length === 0) {
-    dishes = menu.mains.filter((dish) => dish.group === "vegetarian");
-  }
-  return dishes[rotateIndex(seed, dishes.length)];
-}
+function findDish(group, starch, seed, usedNames, previousWeekMains) {
+  const options = mainOptionsFor(group, starch);
+  const duplicateRestricted = group === "beefPork" || group === "chickenEgg";
+  const dish = chooseRotatedOption(
+    options,
+    seed,
+    (option) => !duplicateRestricted || !usedNames.has(option.name),
+    (option) => !previousWeekMains.has(option.name)
+  );
 
-function chooseSide(list, seed) {
-  return list[rotateIndex(seed, list.length)];
-}
-
-function chooseBreakfast(seed, usedBreakfasts) {
-  const start = rotateIndex(seed, menu.breakfasts.length);
-
-  for (let offset = 0; offset < menu.breakfasts.length; offset += 1) {
-    const breakfast = menu.breakfasts[(start + offset) % menu.breakfasts.length];
-
-    if (!usedBreakfasts.has(breakfast)) {
-      return breakfast;
-    }
+  if (!dish) {
+    throw new Error(`Unable to choose a non-duplicate ${group} main for starch "${starch}".`);
   }
 
-  throw new Error("Unable to choose a non-duplicate breakfast for the week.");
+  return dish;
 }
 
-function buildDay(date, weekIndex, usedNames, usedBreakfasts) {
+function chooseVegetarianDish(starch, seed, previousWeekMains) {
+  const dishes = mainOptionsFor("vegetarian", starch);
+
+  return chooseRotatedOption(
+    dishes,
+    seed,
+    () => true,
+    (dish) => !previousWeekMains.has(dish.name)
+  );
+}
+
+function chooseSide(list, seed, previousWeekItems) {
+  return chooseRotatedOption(
+    list,
+    seed,
+    () => true,
+    (item) => !previousWeekItems.has(item)
+  );
+}
+
+function chooseBreakfast(seed, usedBreakfasts, previousWeekBreakfasts) {
+  const breakfast = chooseRotatedOption(
+    menu.breakfasts,
+    seed,
+    (item) => !usedBreakfasts.has(item),
+    (item) => !previousWeekBreakfasts.has(item)
+  );
+
+  if (!breakfast) {
+    throw new Error("Unable to choose a non-duplicate breakfast for the week.");
+  }
+
+  return breakfast;
+}
+
+export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred) {
+  return chooseRotatedOption(options, seed, isAllowed, isPreferred);
+}
+
+function createWeekDishes() {
+  return {
+    breakfasts: new Set(),
+    mains: new Set(),
+    soups: new Set(),
+    sides: new Set()
+  };
+}
+
+function buildDay(date, weekIndex, weekDishes, previousWeekDishes) {
   const weekdayIndex = date.getUTCDay() - 1;
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
-  const breakfast = chooseBreakfast(seed + weekIndex * 11, usedBreakfasts);
+  const breakfast = chooseBreakfast(seed + weekIndex * 11, weekDishes.breakfasts, previousWeekDishes.breakfasts);
   const vegetarianDay = isVegetarianLunarDay(date);
   const pattern = fullWeekPatterns[weekIndex % fullWeekPatterns.length];
   const [group, starch] = pattern[weekdayIndex];
   const dish = vegetarianDay
-    ? chooseVegetarianDish(starch, seed + weekIndex)
-    : findDish(group, starch, seed + weekIndex, usedNames);
+    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains)
+    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains);
 
-  usedBreakfasts.add(breakfast);
-  usedNames.add(dish.name);
+  weekDishes.breakfasts.add(breakfast);
+  weekDishes.mains.add(dish.name);
 
   const hasRiceSides = !vegetarianDay && dish.starch === "rice";
+  const soup = hasRiceSides ? chooseSide(menu.soups, seed + 3, previousWeekDishes.soups) : null;
+  const side = hasRiceSides ? chooseSide(menu.sides, seed + 7, previousWeekDishes.sides) : null;
+
+  if (soup) {
+    weekDishes.soups.add(soup);
+  }
+  if (side) {
+    weekDishes.sides.add(side);
+  }
+
   return {
     date: toIsoDate(date),
     displayDate: toDisplayDate(date),
@@ -302,17 +363,19 @@ function buildDay(date, weekIndex, usedNames, usedBreakfasts) {
     group: dish.group,
     groupLabel: groupLabels[dish.group],
     starch: dish.starch,
-    soup: hasRiceSides ? chooseSide(menu.soups, seed + 3) : null,
-    side: hasRiceSides ? chooseSide(menu.sides, seed + 7) : null,
+    soup,
+    side,
     vegetarianDay
   };
 }
 
 function buildPlanFromDays(days, metadata) {
-  const weeks = groupByWeek(days).map((week, weekIndex) => {
-    const usedNames = new Set();
-    const usedBreakfasts = new Set();
-    const days = week.days.map((date) => buildDay(date, weekIndex, usedNames, usedBreakfasts));
+  const weeks = [];
+  let previousWeekDishes = createWeekDishes();
+
+  for (const [weekIndex, week] of groupByWeek(days).entries()) {
+    const weekDishes = createWeekDishes();
+    const days = week.days.map((date) => buildDay(date, weekIndex, weekDishes, previousWeekDishes));
     const vegetarianDays = days.filter((day) => day.vegetarianDay);
     const notes = [];
 
@@ -329,14 +392,16 @@ function buildPlanFromDays(days, metadata) {
       notes.push("Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.");
     }
 
-    return {
+    weeks.push({
       startDate: days[0].displayDate,
       endDate: days[days.length - 1].displayDate,
       title: `Tuần ${days[0].displayDate} - ${days[days.length - 1].displayDate}`,
       notes,
       days
-    };
-  });
+    });
+
+    previousWeekDishes = weekDishes;
+  }
 
   return {
     metadata,
