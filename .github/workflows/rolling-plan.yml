@@ -26,6 +26,9 @@ jobs:
       - name: Validate rolling plan
         run: node scripts/validate-plan.mjs
 
+      - name: Run validator regression tests
+        run: node --test scripts/*.test.mjs
+
       - name: Render Pages site
         run: node scripts/render-site.mjs
 

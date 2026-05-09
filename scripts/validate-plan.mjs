@@ -1,15 +1,27 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { solarToLunar } from "./lunar.mjs";
+import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const scriptPath = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(scriptPath);
 const rootDir = path.resolve(__dirname, "..");
 const planPath = path.join(rootDir, "meal-plan.json");
+const menuPath = path.join(rootDir, "data", "menu.json");
+const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
+const mainsByName = new Map((Array.isArray(menu.mains) ? menu.mains : []).map((dish) => [dish.name, dish]));
+const soupNames = new Set(Array.isArray(menu.soups) ? menu.soups : []);
+const sideNames = new Set(Array.isArray(menu.sides) ? menu.sides : []);
 
 const weekdayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const allowedGroups = new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]);
 const allowedStarches = new Set(["rice", "noodle", "porridge"]);
+const groupLabels = new Map([
+  ["fish", "Cá"],
+  ["beefPork", "Bò/heo"],
+  ["chickenEgg", "Gà/trứng"],
+  ["vegetarian", "Chay"]
+]);
 const rollingWeekCount = 4;
 const weekdaysPerWeek = 5;
 const fullWeekGroupCounts = new Map([
@@ -22,6 +34,13 @@ const fullWeekNoodleCount = 2;
 
 function toIsoDate(date) {
   return date.toISOString().slice(0, 10);
+}
+
+function toDisplayDate(date) {
+  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(
+    2,
+    "0"
+  )}/${date.getUTCFullYear()}`;
 }
 
 function countBy(items, field) {
@@ -41,6 +60,15 @@ function assertCount(counts, expectedCounts, label, errors) {
   }
 }
 
+function assertMaxCount(counts, maximumCounts, label, errors) {
+  for (const [key, maximum] of maximumCounts) {
+    const actual = counts.get(key) ?? 0;
+    if (actual > maximum) {
+      errors.push(`${label} expected at most ${maximum} ${key} entries, found ${actual}.`);
+    }
+  }
+}
+
 function assertFullWeekStarches(days, label, errors) {
   const stapleCount = days.filter((day) => day.starch === "rice" || day.starch === "porridge").length;
   const noodleCount = days.filter((day) => day.starch === "noodle").length;
@@ -51,6 +79,18 @@ function assertFullWeekStarches(days, label, errors) {
   if (noodleCount !== fullWeekNoodleCount) {
     errors.push(`${label} expected ${fullWeekNoodleCount} noodle entries, found ${noodleCount}.`);
   }
+}
+
+function expectedVegetarianNote(days) {
+  const vegetarianDays = days.filter((day) => day.vegetarianDay);
+
+  if (vegetarianDays.length === 0) {
+    return "Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.";
+  }
+
+  return `Có ngày chay âm lịch: ${vegetarianDays
+    .map((day) => `${day.weekday} ${day.displayDate}`)
+    .join(", ")}.`;
 }
 
 function isNonEmptyString(value) {
@@ -68,6 +108,14 @@ function parseIsoDate(value) {
   }
 
   return date;
+}
+
+function isValidDateTime(value) {
+  return (
+    typeof value === "string" &&
+    /^\d{4}-\d{2}-\d{2}T.+(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
+    !Number.isNaN(new Date(value).getTime())
+  );
 }
 
 function addDays(date, days) {
@@ -90,7 +138,7 @@ function listWeekdaysInRange(startDate, endDate) {
   return dates;
 }
 
-function validatePlan(plan) {
+export function validatePlan(plan) {
   const errors = [];
   const seenDates = new Set();
   let previousPlanDate = null;
@@ -111,7 +159,7 @@ function validatePlan(plan) {
   }
   if (!isNonEmptyString(plan.metadata.generatedAt)) {
     errors.push("metadata.generatedAt must be a non-empty string.");
-  } else if (Number.isNaN(new Date(plan.metadata.generatedAt).getTime())) {
+  } else if (!isValidDateTime(plan.metadata.generatedAt)) {
     errors.push("metadata.generatedAt must be a valid date-time.");
   }
   rangeStart = parseIsoDate(plan.metadata.startDate);
@@ -126,8 +174,12 @@ function validatePlan(plan) {
     errors.push("metadata.startDate must not be after metadata.endDate.");
   } else if (rangeStart && rangeEnd) {
     const expectedEndDate = addDays(rangeStart, rollingWeekCount * 7 - 1);
+    const expectedTitle = `Kế hoạch ăn 4 tuần từ ${toDisplayDate(rangeStart)}`;
     if (rangeStart.getUTCDay() !== 1) {
       errors.push("metadata.startDate must be a Monday.");
+    }
+    if (plan.metadata.title !== expectedTitle) {
+      errors.push(`metadata.title must be "${expectedTitle}".`);
     }
     if (toIsoDate(rangeEnd) !== toIsoDate(expectedEndDate)) {
       errors.push(`metadata.endDate must be ${toIsoDate(expectedEndDate)} for a 4-week rolling plan.`);
@@ -163,9 +215,11 @@ function validatePlan(plan) {
       errors.push(`${weekLabel}.days must be a non-empty array.`);
       continue;
     }
+    if (week.days.length !== weekdaysPerWeek) {
+      errors.push(`${weekLabel}.days must contain exactly ${weekdaysPerWeek} weekdays.`);
+    }
 
     const fullWeek = week.days.length === 5;
-    const vegetarianDays = [];
     let hasVegetarianMain = false;
     const duplicateRestrictedDishes = new Set();
     const firstDay = week.days[0];
@@ -210,6 +264,9 @@ function validatePlan(plan) {
       if (day.weekday !== weekdayNames[weekday]) {
         errors.push(`${dayLabel}.weekday does not match ${day.date}.`);
       }
+      if (day.displayDate !== toDisplayDate(date)) {
+        errors.push(`${dayLabel}.displayDate does not match ${day.date}.`);
+      }
       if (
         rangeStart &&
         rangeEnd &&
@@ -223,8 +280,20 @@ function validatePlan(plan) {
       if (day.vegetarianDay !== isVegetarianLunarDay) {
         errors.push(`${dayLabel}.vegetarianDay does not match lunar day ${lunar.day}.`);
       }
+      if (day.lunarDate !== lunarDateLabel(date)) {
+        errors.push(`${dayLabel}.lunarDate does not match ${day.date}.`);
+      }
+      if (!isNonEmptyString(day.main)) {
+        errors.push(`${dayLabel}.main must be a non-empty string.`);
+      } else if (!mainsByName.has(day.main)) {
+        errors.push(`${dayLabel}.main must exist in data/menu.json.`);
+      } else {
+        const menuDish = mainsByName.get(day.main);
+        if (day.group !== menuDish.group || day.starch !== menuDish.starch) {
+          errors.push(`${dayLabel}.main metadata must match data/menu.json.`);
+        }
+      }
       if (day.vegetarianDay) {
-        vegetarianDays.push(day);
         if (day.group !== "vegetarian" || day.groupLabel !== "Chay") {
           errors.push(`${dayLabel} must use a vegetarian main on vegetarian lunar days.`);
         }
@@ -234,6 +303,8 @@ function validatePlan(plan) {
       }
       if (!allowedGroups.has(day.group)) {
         errors.push(`${dayLabel}.group must be one of: ${[...allowedGroups].join(", ")}.`);
+      } else if (day.groupLabel !== groupLabels.get(day.group)) {
+        errors.push(`${dayLabel}.groupLabel must match group "${day.group}".`);
       }
       if (!allowedStarches.has(day.starch)) {
         errors.push(`${dayLabel}.starch must be one of: ${[...allowedStarches].join(", ")}.`);
@@ -253,13 +324,28 @@ function validatePlan(plan) {
           errors.push(`${dayLabel}.${field} must be null or a non-empty string.`);
         }
       }
+      if (isNonEmptyString(day.soup) && !soupNames.has(day.soup)) {
+        errors.push(`${dayLabel}.soup must exist in data/menu.json.`);
+      }
+      if (isNonEmptyString(day.side) && !sideNames.has(day.side)) {
+        errors.push(`${dayLabel}.side must exist in data/menu.json.`);
+      }
       if ((day.starch !== "rice" || day.vegetarianDay) && (day.soup || day.side)) {
         errors.push(`${dayLabel} non-rice or vegetarian meal must not include soup or side.`);
       }
     }
 
-    if (fullWeek && !hasVegetarianMain) {
-      assertCount(countBy(week.days, "group"), fullWeekGroupCounts, weekLabel, errors);
+    if (fullWeek) {
+      const groupCounts = countBy(week.days, "group");
+      const vegetarianNote = expectedVegetarianNote(week.days);
+      if (Array.isArray(week.notes) && !week.notes.includes(vegetarianNote)) {
+        errors.push(`${weekLabel}.notes must include "${vegetarianNote}".`);
+      }
+      if (hasVegetarianMain) {
+        assertMaxCount(groupCounts, fullWeekGroupCounts, weekLabel, errors);
+      } else {
+        assertCount(groupCounts, fullWeekGroupCounts, weekLabel, errors);
+      }
       assertFullWeekStarches(week.days, weekLabel, errors);
     }
   }
@@ -286,6 +372,8 @@ function validatePlan(plan) {
   }
 }
 
-const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
-validatePlan(plan);
-console.log("Validated meal-plan.json.");
+if (process.argv[1] === scriptPath) {
+  const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+  validatePlan(plan);
+  console.log("Validated meal-plan.json.");
+}

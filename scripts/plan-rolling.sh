@@ -18,4 +18,5 @@ fi
 echo "$(date -u +%Y-%m-%dT%H:%M:%SZ) Running rolling meal planning."
 node scripts/generate-meal-plan.mjs
 node scripts/validate-plan.mjs
+node --test scripts/*.test.mjs
 node scripts/render-site.mjs

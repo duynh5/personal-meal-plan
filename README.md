@@ -7,6 +7,7 @@ Du an lap ke hoach bua toi gia dinh va publish thanh trang GitHub Pages.
 ```sh
 node scripts/generate-meal-plan.mjs
 node scripts/validate-plan.mjs
+node --test scripts/*.test.mjs
 node scripts/render-site.mjs
 ```
 

@@ -25,6 +25,7 @@
     { "name": "bún heo mộc", "group": "beefPork", "starch": "noodle" },
     { "name": "bún thịt nướng", "group": "beefPork", "starch": "noodle" },
     { "name": "bún chả giò", "group": "beefPork", "starch": "noodle" },
+    { "name": "cơm chay tàu hủ rau củ", "group": "vegetarian", "starch": "rice" },
     { "name": "bún nước tương tàu hủ", "group": "vegetarian", "starch": "noodle" },
     { "name": "mì xào chay", "group": "vegetarian", "starch": "noodle" },
     { "name": "mì heo xào", "group": "beefPork", "starch": "noodle" },

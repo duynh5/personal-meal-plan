@@ -3,7 +3,8 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const scriptPath = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(scriptPath);
 const rootDir = path.resolve(__dirname, "..");
 const menuPath = path.join(rootDir, "data", "menu.json");
 const outputJsonPath = path.join(rootDir, "meal-plan.json");
@@ -66,6 +67,7 @@ function validateMenu() {
   const requiredGroupStarches = new Set(
     fullWeekPatterns.flat().map(([group, starch]) => `${group}:${starch}`)
   );
+  const requiredVegetarianStarches = new Set(fullWeekPatterns.flat().map(([, starch]) => starch));
   const mains = Array.isArray(menu.mains) ? menu.mains : [];
   const soups = Array.isArray(menu.soups) ? menu.soups : [];
   const sides = Array.isArray(menu.sides) ? menu.sides : [];
@@ -89,10 +91,12 @@ function validateMenu() {
     }
     if (typeof dish.name !== "string" || dish.name.trim() === "") {
       errors.push(`${label}.name must be a non-empty string.`);
-    } else if (mainNames.has(dish.name)) {
-      errors.push(`${label}.name duplicates "${dish.name}".`);
+    } else if (dish.name !== dish.name.trim()) {
+      errors.push(`${label}.name must not have leading or trailing whitespace.`);
+    } else if (mainNames.has(dish.name.trim())) {
+      errors.push(`${label}.name duplicates "${dish.name.trim()}".`);
     } else {
-      mainNames.add(dish.name);
+      mainNames.add(dish.name.trim());
     }
     if (!allowedGroups.has(dish.group)) {
       errors.push(`${label}.group must be one of: ${[...allowedGroups].join(", ")}.`);
@@ -111,14 +115,26 @@ function validateMenu() {
   if (!mains.some((dish) => dish.group === "vegetarian")) {
     errors.push("data/menu.json needs at least one vegetarian main.");
   }
+  for (const starch of requiredVegetarianStarches) {
+    if (!mains.some((dish) => dish.group === "vegetarian" && dish.starch === starch)) {
+      errors.push(`data/menu.json needs at least one vegetarian main with starch "${starch}".`);
+    }
+  }
 
   for (const [field, items] of [
     ["soups", soups],
     ["sides", sides]
   ]) {
+    const names = new Set();
     for (const [index, item] of items.entries()) {
       if (typeof item !== "string" || item.trim() === "") {
         errors.push(`${field}[${index}] must be a non-empty string.`);
+      } else if (item !== item.trim()) {
+        errors.push(`${field}[${index}] must not have leading or trailing whitespace.`);
+      } else if (names.has(item.trim())) {
+        errors.push(`${field}[${index}] duplicates "${item.trim()}".`);
+      } else {
+        names.add(item.trim());
       }
     }
   }
@@ -143,6 +159,12 @@ function currentVietnamDate(date = new Date()) {
   const parts = getVietnamDateParts(date);
 
   return makeUtcDate(Number(parts.year), Number(parts.month), Number(parts.day));
+}
+
+function assertValidDate(value, label) {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
+    throw new Error(`${label} must be a valid Date.`);
+  }
 }
 
 function nextMondayOnOrAfter(date) {
@@ -223,8 +245,11 @@ function isVegetarianLunarDay(date) {
   return lunar.day === 1 || lunar.day === 15;
 }
 
-function chooseVegetarianDish(seed) {
-  const dishes = menu.mains.filter((dish) => dish.group === "vegetarian");
+function chooseVegetarianDish(starch, seed) {
+  let dishes = menu.mains.filter((dish) => dish.group === "vegetarian" && dish.starch === starch);
+  if (dishes.length === 0) {
+    dishes = menu.mains.filter((dish) => dish.group === "vegetarian");
+  }
   return dishes[rotateIndex(seed, dishes.length)];
 }
 
@@ -239,7 +264,7 @@ function buildDay(date, weekIndex, usedNames) {
   const pattern = fullWeekPatterns[weekIndex % fullWeekPatterns.length];
   const [group, starch] = pattern[weekdayIndex];
   const dish = vegetarianDay
-    ? chooseVegetarianDish(seed + weekIndex)
+    ? chooseVegetarianDish(starch, seed + weekIndex)
     : findDish(group, starch, seed + weekIndex, usedNames);
 
   usedNames.add(dish.name);
@@ -295,7 +320,10 @@ function buildPlanFromDays(days, metadata) {
   };
 }
 
-function buildRollingPlan(runDate = new Date()) {
+export function buildRollingPlan(runDate = new Date()) {
+  assertValidDate(runDate, "runDate");
+  validateMenu();
+
   const startDate = nextMondayOnOrAfter(currentVietnamDate(runDate));
   const endDate = addDays(startDate, rollingWeekCount * 7 - 1);
   const days = listWeekdaysInRange(startDate, endDate);
@@ -305,7 +333,7 @@ function buildRollingPlan(runDate = new Date()) {
     startDate: toIsoDate(startDate),
     endDate: toIsoDate(endDate),
     timezone: timeZone,
-    generatedAt: new Date().toISOString()
+    generatedAt: runDate.toISOString()
   });
 }
 
@@ -336,10 +364,10 @@ function renderMarkdown(plan) {
   return `${lines.join("\n").trim()}\n`;
 }
 
-validateMenu();
+if (process.argv[1] === scriptPath) {
+  const plan = buildRollingPlan();
 
-const plan = buildRollingPlan();
-
-fs.writeFileSync(outputJsonPath, `${JSON.stringify(plan, null, 2)}\n`);
-fs.writeFileSync(outputMdPath, renderMarkdown(plan));
-console.log(`Generated ${plan.metadata.title}.`);
+  fs.writeFileSync(outputJsonPath, `${JSON.stringify(plan, null, 2)}\n`);
+  fs.writeFileSync(outputMdPath, renderMarkdown(plan));
+  console.log(`Generated ${plan.metadata.title}.`);
+}
