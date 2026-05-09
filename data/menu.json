@@ -1,17 +1,22 @@
 {
   "breakfasts": [
-    "bánh mì ốp la",
-    "bánh mì thịt nguội",
+    "bánh mì bơ đg",
+    "bánh bao",
+    "bánh giò",
+    "xôi chiên nc tương",
+    "bánh ướt",
+    "bánh mì phomai chuối",
+    "bánh mì 7 hổ",
+    "há cảo tôm",
+    "hoành thánh",
+    "tàu hủ",
+    "mì nước tương",
+    "bắp luộc",
+    "xôi bắp",
     "xôi mặn",
-    "cháo thịt bằm",
-    "phở bò",
-    "bún mọc",
-    "mì trứng",
-    "bánh cuốn",
-    "bánh ướt chả lụa",
-    "hủ tiếu nam vang",
-    "cơm tấm sườn trứng",
-    "sữa chua granola"
+    "xôi ngọt",
+    "bánh mì má hải",
+    "bánh cuốn tây hồ"
   ],
   "mains": [
     { "name": "cơm bò bít tết + khoai tây", "group": "beefPork", "starch": "rice" },
