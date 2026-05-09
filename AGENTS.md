@@ -49,4 +49,5 @@ Dự án lập kế hoạch bữa cơm tối gia đình và publish thành trang
   - Script luôn ghi kế hoạch cho 4 tuần kế tiếp theo `Asia/Ho_Chi_Minh`.
   - Workflow kiểm tra `meal-plan.json` trước khi render site.
   - Workflow commit lại `meal-plan.md`, `meal-plan.json`, và `site/`.
+  - Workflow publish GitHub Pages chạy sau khi workflow rolling hoàn tất thành công.
 - `scripts/plan-rolling.sh` chỉ là dự phòng local, không phải nguồn tự động hóa chính.

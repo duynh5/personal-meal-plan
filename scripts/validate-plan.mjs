@@ -10,15 +10,15 @@ const planPath = path.join(rootDir, "meal-plan.json");
 const weekdayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const allowedGroups = new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]);
 const allowedStarches = new Set(["rice", "noodle", "porridge"]);
+const rollingWeekCount = 4;
+const weekdaysPerWeek = 5;
 const fullWeekGroupCounts = new Map([
   ["fish", 2],
   ["beefPork", 2],
   ["chickenEgg", 1]
 ]);
-const fullWeekStarchCounts = new Map([
-  ["rice", 3],
-  ["noodle", 2]
-]);
+const fullWeekStapleCount = 3;
+const fullWeekNoodleCount = 2;
 
 function toIsoDate(date) {
   return date.toISOString().slice(0, 10);
@@ -41,6 +41,18 @@ function assertCount(counts, expectedCounts, label, errors) {
   }
 }
 
+function assertFullWeekStarches(days, label, errors) {
+  const stapleCount = days.filter((day) => day.starch === "rice" || day.starch === "porridge").length;
+  const noodleCount = days.filter((day) => day.starch === "noodle").length;
+
+  if (stapleCount !== fullWeekStapleCount) {
+    errors.push(`${label} expected ${fullWeekStapleCount} rice or porridge entries, found ${stapleCount}.`);
+  }
+  if (noodleCount !== fullWeekNoodleCount) {
+    errors.push(`${label} expected ${fullWeekNoodleCount} noodle entries, found ${noodleCount}.`);
+  }
+}
+
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim() !== "";
 }
@@ -56,6 +68,12 @@ function parseIsoDate(value) {
   }
 
   return date;
+}
+
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
 }
 
 function listWeekdaysInRange(startDate, endDate) {
@@ -106,9 +124,19 @@ function validatePlan(plan) {
   }
   if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
     errors.push("metadata.startDate must not be after metadata.endDate.");
+  } else if (rangeStart && rangeEnd) {
+    const expectedEndDate = addDays(rangeStart, rollingWeekCount * 7 - 1);
+    if (rangeStart.getUTCDay() !== 1) {
+      errors.push("metadata.startDate must be a Monday.");
+    }
+    if (toIsoDate(rangeEnd) !== toIsoDate(expectedEndDate)) {
+      errors.push(`metadata.endDate must be ${toIsoDate(expectedEndDate)} for a 4-week rolling plan.`);
+    }
   }
   if (!Array.isArray(plan.weeks)) {
     throw new Error("meal-plan.json weeks must be an array.");
+  } else if (plan.weeks.length !== rollingWeekCount) {
+    errors.push(`weeks must contain exactly ${rollingWeekCount} weeks.`);
   }
 
   for (const [weekIndex, week] of plan.weeks.entries()) {
@@ -138,6 +166,7 @@ function validatePlan(plan) {
 
     const fullWeek = week.days.length === 5;
     const vegetarianDays = [];
+    let hasVegetarianMain = false;
     const duplicateRestrictedDishes = new Set();
     const firstDay = week.days[0];
     const lastDay = week.days[week.days.length - 1];
@@ -200,6 +229,9 @@ function validatePlan(plan) {
           errors.push(`${dayLabel} must use a vegetarian main on vegetarian lunar days.`);
         }
       }
+      if (day.group === "vegetarian") {
+        hasVegetarianMain = true;
+      }
       if (!allowedGroups.has(day.group)) {
         errors.push(`${dayLabel}.group must be one of: ${[...allowedGroups].join(", ")}.`);
       }
@@ -226,14 +258,17 @@ function validatePlan(plan) {
       }
     }
 
-    if (fullWeek && vegetarianDays.length === 0) {
+    if (fullWeek && !hasVegetarianMain) {
       assertCount(countBy(week.days, "group"), fullWeekGroupCounts, weekLabel, errors);
-      assertCount(countBy(week.days, "starch"), fullWeekStarchCounts, weekLabel, errors);
+      assertFullWeekStarches(week.days, weekLabel, errors);
     }
   }
 
   if (rangeStart && rangeEnd) {
     const expectedDates = listWeekdaysInRange(new Date(rangeStart), new Date(rangeEnd));
+    if (expectedDates.length !== rollingWeekCount * weekdaysPerWeek) {
+      errors.push(`metadata date range must contain exactly ${rollingWeekCount * weekdaysPerWeek} weekdays.`);
+    }
     for (const date of expectedDates) {
       if (!seenDates.has(date)) {
         errors.push(`meal-plan.json is missing weekday ${date}.`);

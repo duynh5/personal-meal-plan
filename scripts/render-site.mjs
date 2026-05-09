@@ -9,8 +9,11 @@ const siteAssetsDir = path.join(siteDir, "assets");
 const planPath = path.join(rootDir, "meal-plan.json");
 const cssPath = path.join(rootDir, "assets", "site.css");
 const jsPath = path.join(rootDir, "assets", "site.js");
+const weekdayNames = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
 const allowedGroups = new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]);
 const allowedStarches = new Set(["rice", "noodle", "porridge"]);
+const rollingWeekCount = 4;
+const weekdaysPerWeek = 5;
 
 function toIsoDate(date) {
   return date.toISOString().slice(0, 10);
@@ -60,8 +63,10 @@ function parseIsoDate(value, path, errors) {
   return date;
 }
 
-function assertIsoDate(value, path, errors) {
-  parseIsoDate(value, path, errors);
+function addDays(date, days) {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
 }
 
 function listWeekdaysInRange(startDate, endDate) {
@@ -94,6 +99,9 @@ function validatePlan(plan) {
     errors.push("metadata must be an object.");
   } else {
     assertString(metadata.title, "metadata.title", errors);
+    if (metadata.timezone !== "Asia/Ho_Chi_Minh") {
+      errors.push('metadata.timezone must be "Asia/Ho_Chi_Minh".');
+    }
     assertString(metadata.generatedAt, "metadata.generatedAt", errors);
     if (Number.isNaN(new Date(metadata.generatedAt).getTime())) {
       errors.push("metadata.generatedAt must be a valid date-time.");
@@ -102,12 +110,23 @@ function validatePlan(plan) {
     rangeEnd = parseIsoDate(metadata.endDate, "metadata.endDate", errors);
     if (rangeStart && rangeEnd && rangeStart > rangeEnd) {
       errors.push("metadata.startDate must not be after metadata.endDate.");
+    } else if (rangeStart && rangeEnd) {
+      const expectedEndDate = addDays(rangeStart, rollingWeekCount * 7 - 1);
+      if (rangeStart.getUTCDay() !== 1) {
+        errors.push("metadata.startDate must be a Monday.");
+      }
+      if (toIsoDate(rangeEnd) !== toIsoDate(expectedEndDate)) {
+        errors.push(`metadata.endDate must be ${toIsoDate(expectedEndDate)} for a 4-week rolling plan.`);
+      }
     }
   }
 
   if (!Array.isArray(plan.weeks) || plan.weeks.length === 0) {
     errors.push("weeks must be a non-empty array.");
   } else {
+    if (plan.weeks.length !== rollingWeekCount) {
+      errors.push(`weeks must contain exactly ${rollingWeekCount} weeks.`);
+    }
     for (const [weekIndex, week] of plan.weeks.entries()) {
       const weekPath = `weeks[${weekIndex}]`;
       if (!week || typeof week !== "object") {
@@ -148,8 +167,8 @@ function validatePlan(plan) {
           continue;
         }
 
-        assertIsoDate(day.date, `${dayPath}.date`, errors);
-        if (typeof day.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day.date)) {
+        const date = parseIsoDate(day.date, `${dayPath}.date`, errors);
+        if (date) {
           if (seenDates.has(day.date)) {
             errors.push(`${dayPath}.date duplicates ${day.date}.`);
           }
@@ -158,6 +177,9 @@ function validatePlan(plan) {
             errors.push(`${dayPath}.date must be later than the previous planned day.`);
           }
           previousPlanDate = day.date;
+          if (day.weekday !== weekdayNames[date.getUTCDay()]) {
+            errors.push(`${dayPath}.weekday does not match ${day.date}.`);
+          }
         }
         for (const field of ["displayDate", "weekday", "lunarDate", "main", "groupLabel"]) {
           assertString(day[field], `${dayPath}.${field}`, errors);
@@ -180,12 +202,18 @@ function validatePlan(plan) {
         if (typeof day.vegetarianDay !== "boolean") {
           errors.push(`${dayPath}.vegetarianDay must be a boolean.`);
         }
+        if (day.vegetarianDay === true && (day.group !== "vegetarian" || day.groupLabel !== "Chay")) {
+          errors.push(`${dayPath} must use a vegetarian main on vegetarian lunar days.`);
+        }
       }
     }
   }
 
   if (rangeStart && rangeEnd) {
     const expectedDates = listWeekdaysInRange(new Date(rangeStart), new Date(rangeEnd));
+    if (expectedDates.length !== rollingWeekCount * weekdaysPerWeek) {
+      errors.push(`metadata date range must contain exactly ${rollingWeekCount * weekdaysPerWeek} weekdays.`);
+    }
     for (const date of expectedDates) {
       if (!seenDates.has(date)) {
         errors.push(`meal-plan.json is missing weekday ${date}.`);

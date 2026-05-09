@@ -18,7 +18,7 @@ Mo `site/index.html` de xem giao dien local.
 - Script sinh ke hoach cho 4 tuan ke tiep theo `Asia/Ho_Chi_Minh`.
 - Workflow validate `meal-plan.json` truoc khi render site.
 - Workflow commit lai `meal-plan.md`, `meal-plan.json`, va `site/`.
-- `.github/workflows/pages.yml` publish thu muc `site/` len GitHub Pages.
+- `.github/workflows/pages.yml` publish thu muc `site/` len GitHub Pages sau khi rolling workflow hoan tat thanh cong.
 
 ## Cai dat GitHub Pages
 

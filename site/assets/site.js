@@ -17,9 +17,9 @@ if (status && todayCard) {
   status.textContent =
     weekday && dateHeading
       ? `Hôm nay: ${weekday.textContent}, ${dateHeading.textContent}`
-      : "Hôm nay có trong lịch ăn tháng này.";
+      : "Hôm nay có trong lịch ăn 4 tuần này.";
 } else if (status) {
-  status.textContent = "Hôm nay không nằm trong lịch ăn tháng này.";
+  status.textContent = "Hôm nay không nằm trong lịch ăn 4 tuần này.";
 }
 
 if (printButton) {
