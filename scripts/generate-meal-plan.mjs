@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(scriptPath);
@@ -319,15 +320,6 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
   return chooseRotatedOption(options, seed, isAllowed, isPreferred);
 }
 
-function createWeekDishes() {
-  return {
-    breakfasts: new Set(),
-    mains: new Set(),
-    soups: new Set(),
-    sides: new Set()
-  };
-}
-
 function buildDay(date, weekIndex, weekDishes, previousWeekDishes) {
   const weekdayIndex = date.getUTCDay() - 1;
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate();
@@ -369,9 +361,9 @@ function buildDay(date, weekIndex, weekDishes, previousWeekDishes) {
   };
 }
 
-function buildPlanFromDays(days, metadata) {
+function buildPlanFromDays(days, metadata, initialPreviousWeekDishes = createWeekDishes()) {
   const weeks = [];
-  let previousWeekDishes = createWeekDishes();
+  let previousWeekDishes = initialPreviousWeekDishes;
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
     const weekDishes = createWeekDishes();
@@ -409,13 +401,17 @@ function buildPlanFromDays(days, metadata) {
   };
 }
 
-export function buildRollingPlan(runDate = new Date()) {
+export function buildRollingPlan(runDate = new Date(), options = {}) {
   assertValidDate(runDate, "runDate");
   validateMenu();
 
   const startDate = nextMondayOnOrAfter(currentVietnamDate(runDate));
   const endDate = addDays(startDate, rollingWeekCount * 7 - 1);
   const days = listWeekdaysInRange(startDate, endDate);
+  const previousWeekDates = new Set(
+    listWeekdaysInRange(addDays(startDate, -7), addDays(startDate, -1)).map(toIsoDate)
+  );
+  const previousWeekDishes = previousWeekDishesFromPlan(options?.previousPlan, previousWeekDates);
 
   return buildPlanFromDays(days, {
     title: `Kế hoạch ăn 4 tuần từ ${toDisplayDate(startDate)}`,
@@ -423,7 +419,7 @@ export function buildRollingPlan(runDate = new Date()) {
     endDate: toIsoDate(endDate),
     timezone: timeZone,
     generatedAt: runDate.toISOString()
-  });
+  }, previousWeekDishes);
 }
 
 function renderMarkdown(plan) {
@@ -455,7 +451,16 @@ function renderMarkdown(plan) {
 }
 
 if (process.argv[1] === scriptPath) {
-  const plan = buildRollingPlan();
+  let previousPlan = null;
+  if (fs.existsSync(outputJsonPath)) {
+    try {
+      previousPlan = JSON.parse(fs.readFileSync(outputJsonPath, "utf8"));
+    } catch (error) {
+      throw new Error(`Unable to read existing meal-plan.json for previous-week context: ${error.message}`);
+    }
+  }
+
+  const plan = buildRollingPlan(new Date(), { previousPlan });
 
   fs.writeFileSync(outputJsonPath, `${JSON.stringify(plan, null, 2)}\n`);
   fs.writeFileSync(outputMdPath, renderMarkdown(plan));

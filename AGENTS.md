@@ -10,6 +10,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 - Script đổi dương lịch sang âm lịch Việt Nam: `scripts/lunar.mjs`.
 - Script render giao diện chia sẻ: `scripts/render-site.mjs`, xuất ra `site/`.
 - GitHub Actions chạy workflow `.github/workflows/rolling-plan.yml`; GitHub Pages publish thư mục `site/`.
+- Khi `meal-plan.json` đã tồn tại, script sinh kế hoạch dùng tuần liền trước trong file này làm ngữ cảnh để tránh lặp món ở tuần đầu kế hoạch mới.
 
 ## Quy Tắc Lập Kế Hoạch
 

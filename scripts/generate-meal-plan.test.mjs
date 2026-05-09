@@ -116,6 +116,61 @@ describe("buildRollingPlan", () => {
     }
   });
 
+  it("uses adjacent existing plan data before choosing the first generated week", () => {
+    const runDate = new Date("2026-05-15T01:00:00.000Z");
+    const unseededPlan = buildRollingPlan(runDate);
+    const firstUnseededDay = unseededPlan.weeks[0].days[0];
+    const previousWeekDates = ["2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15"];
+    const previousPlan = {
+      weeks: [
+        {
+          days: unseededPlan.weeks[0].days.map((day, index) => ({
+            ...day,
+            date: previousWeekDates[index]
+          }))
+        }
+      ]
+    };
+    const seededPlan = buildRollingPlan(runDate, { previousPlan });
+    const firstSeededDay = seededPlan.weeks[0].days[0];
+
+    assert.notEqual(firstSeededDay.breakfast, firstUnseededDay.breakfast);
+    assert.notEqual(firstSeededDay.main, firstUnseededDay.main);
+    assert.notEqual(firstSeededDay.soup, firstUnseededDay.soup);
+    assert.notEqual(firstSeededDay.side, firstUnseededDay.side);
+    assert.doesNotThrow(() => validatePlan(seededPlan));
+  });
+
+  it("ignores incomplete adjacent existing plan data", () => {
+    const runDate = new Date("2026-05-15T01:00:00.000Z");
+    const unseededPlan = buildRollingPlan(runDate);
+    const firstUnseededDay = unseededPlan.weeks[0].days[0];
+    const previousPlan = {
+      weeks: [
+        {
+          days: [
+            null,
+            { ...firstUnseededDay, date: "2026-05-11" },
+            { ...firstUnseededDay, date: "2026-05-11" }
+          ]
+        }
+      ]
+    };
+    const seededPlan = buildRollingPlan(runDate, { previousPlan });
+    const firstSeededDay = seededPlan.weeks[0].days[0];
+
+    assert.equal(firstSeededDay.breakfast, firstUnseededDay.breakfast);
+    assert.equal(firstSeededDay.main, firstUnseededDay.main);
+    assert.equal(firstSeededDay.soup, firstUnseededDay.soup);
+    assert.equal(firstSeededDay.side, firstUnseededDay.side);
+  });
+
+  it("accepts null options", () => {
+    const plan = buildRollingPlan(new Date("2026-05-15T01:00:00.000Z"), null);
+
+    assert.equal(plan.metadata.startDate, "2026-05-18");
+  });
+
   it("rejects invalid run dates", () => {
     assert.throws(() => buildRollingPlan(new Date("not-a-date")), /runDate must be a valid Date/);
   });
