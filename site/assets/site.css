@@ -1,27 +1,28 @@
 :root {
   color-scheme: light;
-  --bg: #f7f4ee;
-  --surface: #ffffff;
-  --surface-soft: #fbfaf6;
+  --bg: #f7fbf8;
+  --surface: #fffdf8;
+  --surface-soft: #f4f0fb;
   --ink: #24211d;
-  --muted: #6e675d;
-  --line: #ded6ca;
-  --green: #2f6f56;
-  --green-soft: #e5f0ea;
-  --blue: #315f88;
-  --blue-soft: #e8f0f7;
-  --red: #9b4d43;
-  --red-soft: #f6e8e5;
-  --gold: #9b6b25;
-  --breakfast: #2f6f56;
-  --breakfast-soft: #e8f3ed;
-  --dinner: #8f4b3f;
-  --dinner-soft: #f6e7e3;
-  --soup: #2d6d86;
-  --soup-soft: #e6f1f5;
-  --side: #84651d;
-  --side-soft: #f3edda;
-  --shadow: 0 18px 50px rgba(50, 42, 31, 0.1);
+  --muted: #746e66;
+  --line: #e4dbcf;
+  --green: #3f7c66;
+  --green-soft: #dff1e8;
+  --blue: #426f92;
+  --blue-soft: #e0edf7;
+  --red: #9a5a52;
+  --red-soft: #f6e1dd;
+  --gold: #816d2e;
+  --gold-soft: #f2e8c9;
+  --breakfast: #3f7c66;
+  --breakfast-soft: #dff1e8;
+  --dinner: #9a5a52;
+  --dinner-soft: #f6e1dd;
+  --soup: #426f92;
+  --soup-soft: #e0edf7;
+  --side: #816d2e;
+  --side-soft: #f2e8c9;
+  --shadow: 0 18px 50px rgba(72, 55, 37, 0.08);
 }
 
 * {
@@ -36,8 +37,8 @@ body {
   margin: 0;
   min-width: 320px;
   background:
-    linear-gradient(90deg, rgba(47, 111, 86, 0.07) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(155, 107, 37, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111, 169, 146, 0.16) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(198, 174, 121, 0.14) 1px, transparent 1px),
     var(--bg);
   background-size: 28px 28px;
   color: var(--ink);
@@ -92,7 +93,7 @@ a {
   padding: 18px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 253, 248, 0.88);
   box-shadow: var(--shadow);
 }
 
@@ -164,7 +165,7 @@ main {
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px 14px;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 253, 248, 0.84);
 }
 
 .toolbar p {
@@ -176,8 +177,8 @@ button {
   border: 0;
   border-radius: 8px;
   padding: 0 14px;
-  background: var(--green);
-  color: #ffffff;
+  background: var(--green-soft);
+  color: var(--green);
   font: inherit;
   font-weight: 800;
   cursor: pointer;
@@ -185,7 +186,7 @@ button {
 
 button:focus-visible,
 a:focus-visible {
-  outline: 3px solid rgba(49, 95, 136, 0.42);
+  outline: 3px solid rgba(66, 111, 146, 0.34);
   outline-offset: 2px;
 }
 
@@ -239,12 +240,12 @@ a:focus-visible {
   border-radius: 8px;
   padding: 14px;
   background: var(--surface);
-  box-shadow: 0 8px 26px rgba(50, 42, 31, 0.06);
+  box-shadow: 0 8px 26px rgba(72, 55, 37, 0.05);
 }
 
 .day-card.is-today {
   border-color: var(--green);
-  box-shadow: 0 0 0 3px rgba(47, 111, 86, 0.12), var(--shadow);
+  box-shadow: 0 0 0 3px rgba(63, 124, 102, 0.14), var(--shadow);
 }
 
 .day-card__top {
