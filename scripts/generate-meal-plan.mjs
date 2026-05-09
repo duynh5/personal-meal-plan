@@ -2,6 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
+import { fullWeekGroupPatterns, fullWeekStarchPatterns, groupPatternFor, rotatedStarchPatterns } from "./meal-plan/week-patterns.mjs";
 import { readPlanConfig } from "./plan-config.mjs";
 import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
 
@@ -12,9 +14,7 @@ const planConfigPath = path.join(rootDir, "data", "plan-config.json");
 const menuPath = path.join(rootDir, "data", "menu.json");
 const outputJsonPath = path.join(rootDir, "meal-plan.json");
 const outputMdPath = path.join(rootDir, "meal-plan.md");
-const timeZone = "Asia/Ho_Chi_Minh";
-const vietnamUtcOffset = 7;
-const rollingWeekCount = 4;
+const timeZone = "Asia/Ho_Chi_Minh", vietnamUtcOffset = 7, rollingWeekCount = 4;
 const planConfig = readPlanConfig(planConfigPath);
 const defaultPlanVariant = process.env.MEAL_PLAN_VARIANT ?? planConfig.mealPlanVariant;
 
@@ -26,24 +26,7 @@ const groupLabels = {
   vegetarian: "Chay"
 };
 const allowedStarches = new Set(["rice", "noodle", "porridge"]);
-const fullWeekPatterns = [
-  [
-    ["fish", "rice"],
-    ["beefPork", "noodle"],
-    ["chickenEgg", "rice"],
-    ["fish", "noodle"],
-    ["beefPork", "rice"]
-  ],
-  [
-    ["beefPork", "rice"],
-    ["fish", "noodle"],
-    ["chickenEgg", "rice"],
-    ["beefPork", "noodle"],
-    ["fish", "rice"]
-  ]
-];
-const weekdaysPerWeek = 5;
-const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
+const weekdaysPerWeek = 5, menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
 
 function pad(number) {
   return String(number).padStart(2, "0");
@@ -70,10 +53,8 @@ function addDays(date, days) {
 function validateMenu() {
   const errors = [];
   const allowedGroups = new Set(Object.keys(groupLabels));
-  const requiredGroupStarches = new Set(
-    fullWeekPatterns.flat().map(([group, starch]) => `${group}:${starch}`)
-  );
-  const requiredVegetarianStarches = new Set(fullWeekPatterns.flat().map(([, starch]) => starch));
+  const requiredGroups = new Set(fullWeekGroupPatterns.flat());
+  const requiredStarches = new Set(fullWeekStarchPatterns.flat());
   const mains = Array.isArray(menu.mains) ? menu.mains : [];
   const breakfasts = Array.isArray(menu.breakfasts) ? menu.breakfasts : [];
   const soups = Array.isArray(menu.soups) ? menu.soups : [];
@@ -116,16 +97,15 @@ function validateMenu() {
     }
   }
 
-  for (const key of requiredGroupStarches) {
-    const [group, starch] = key.split(":");
-    if (!mains.some((dish) => dish.group === group && dish.starch === starch)) {
-      errors.push(`data/menu.json needs at least one ${group} main with starch "${starch}".`);
+  for (const group of requiredGroups) {
+    if (!mains.some((dish) => dish.group === group)) {
+      errors.push(`data/menu.json needs at least one ${group} main.`);
     }
   }
   if (!mains.some((dish) => dish.group === "vegetarian")) {
     errors.push("data/menu.json needs at least one vegetarian main.");
   }
-  for (const starch of requiredVegetarianStarches) {
+  for (const starch of requiredStarches) {
     if (!mains.some((dish) => dish.group === "vegetarian" && dish.starch === starch)) {
       errors.push(`data/menu.json needs at least one vegetarian main with starch "${starch}".`);
     }
@@ -298,6 +278,53 @@ function findDish(group, starch, seed, usedNames, previousWeekMains) {
   return dish;
 }
 
+function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes) {
+  const groupPattern = groupPatternFor(weekIndex);
+  const usedMains = new Set();
+  let previousWeekMainRepeats = 0;
+  let fallbackStarchChoices = 0;
+
+  for (const [dayIndex, date] of dates.entries()) {
+    const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
+    const vegetarianDay = isVegetarianLunarDay(date);
+    const group = vegetarianDay ? "vegetarian" : groupPattern[dayIndex];
+    const starch = starchPattern[dayIndex];
+    const dish = vegetarianDay
+      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains)
+      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains);
+
+    if (previousWeekDishes.mains.has(dish.name)) {
+      previousWeekMainRepeats += 1;
+    }
+    if (dish.starch !== starch) {
+      fallbackStarchChoices += 1;
+    }
+    usedMains.add(dish.name);
+  }
+
+  return previousWeekMainRepeats * 100 + fallbackStarchChoices;
+}
+
+function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishes) {
+  const seed = dates[0].getUTCFullYear() * 10000 + (dates[0].getUTCMonth() + 1) * 100 + dates[0].getUTCDate() + seedOffset;
+  let bestPattern = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (const starchPattern of rotatedStarchPatterns(seed + weekIndex * 17)) {
+    const score = scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes);
+
+    if (score < bestScore) {
+      bestPattern = starchPattern;
+      bestScore = score;
+    }
+    if (bestScore === 0) {
+      break;
+    }
+  }
+
+  return bestPattern;
+}
+
 function chooseVegetarianDish(starch, seed, previousWeekMains) {
   const dishes = mainOptionsFor("vegetarian", starch);
 
@@ -337,13 +364,10 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
   return chooseRotatedOption(options, seed, isAllowed, isPreferred);
 }
 
-function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes) {
-  const weekdayIndex = date.getUTCDay() - 1;
+function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, group, starch) {
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
   const breakfast = chooseBreakfast(seed + weekIndex * 11, weekDishes.breakfasts, previousWeekDishes.breakfasts);
   const vegetarianDay = isVegetarianLunarDay(date);
-  const pattern = fullWeekPatterns[weekIndex % fullWeekPatterns.length];
-  const [group, starch] = pattern[weekdayIndex];
   const dish = vegetarianDay
     ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains)
     : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains);
@@ -384,7 +408,19 @@ function buildPlanFromDays(days, metadata, seedOffset, initialPreviousWeekDishes
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
     const weekDishes = createWeekDishes();
-    const days = week.days.map((date) => buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes));
+    const groupPattern = groupPatternFor(weekIndex);
+    const starchPattern = chooseWeekStarchPattern(week.days, weekIndex, seedOffset, previousWeekDishes);
+    const days = week.days.map((date, dayIndex) =>
+      buildDay(
+        date,
+        weekIndex,
+        seedOffset,
+        weekDishes,
+        previousWeekDishes,
+        groupPattern[dayIndex],
+        starchPattern[dayIndex]
+      )
+    );
     const vegetarianDays = days.filter((day) => day.vegetarianDay);
     const notes = [];
 
@@ -440,34 +476,6 @@ export function buildRollingPlan(runDate = new Date(), options = {}) {
     generatedAt: runDate.toISOString(),
     ...(planVariant ? { planVariant: String(planVariant) } : {})
   }, seedOffset, previousWeekDishes);
-}
-
-function renderMarkdown(plan) {
-  const lines = [`# ${plan.metadata.title}`, ""];
-
-  for (const week of plan.weeks) {
-    lines.push(`## ${week.title}`, "");
-    for (const note of week.notes) {
-      lines.push(`Ghi chú: ${note}`);
-    }
-    lines.push("");
-
-    for (const day of week.days) {
-      lines.push(`### ${day.weekday} - ${day.displayDate}`, "");
-      lines.push(`- Ngày âm: ${day.lunarDate}`);
-      lines.push(`- Bữa sáng: ${day.breakfast}`);
-      lines.push(`- ${day.vegetarianDay ? "Món chính" : "Món mặn chính"}: ${day.main}`);
-      if (day.soup) {
-        lines.push(`- Món canh: ${day.soup}`);
-      }
-      if (day.side) {
-        lines.push(`- Món xào/luộc: ${day.side}`);
-      }
-      lines.push("");
-    }
-  }
-
-  return `${lines.join("\n").trim()}\n`;
 }
 
 if (process.argv[1] === scriptPath) {

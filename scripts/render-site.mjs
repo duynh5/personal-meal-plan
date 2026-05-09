@@ -32,6 +32,13 @@ function renderDay(day) {
     `<span class="tag">${escapeHtml(day.groupLabel)}</span>`,
     `<span class="tag tag-muted">${escapeHtml(day.lunarDate)}</span>`
   ];
+  const details = [
+    day.soup ? `<div class="meal-list__item meal-list__soup"><dt>Canh</dt><dd>${escapeHtml(day.soup)}</dd></div>` : "",
+    day.side ? `<div class="meal-list__item meal-list__side"><dt>Xào/luộc</dt><dd>${escapeHtml(day.side)}</dd></div>` : ""
+  ]
+    .filter(Boolean)
+    .map((detail) => `\n        ${detail}`)
+    .join("");
 
   if (day.vegetarianDay) {
     tags.push('<span class="tag tag-veg">Ngày chay</span>');
@@ -54,17 +61,7 @@ function renderDay(day) {
         <div class="meal-list__item meal-list__dinner">
           <dt>Bữa tối</dt>
           <dd>${escapeHtml(day.main)}</dd>
-        </div>
-        ${
-          day.soup
-            ? `<div class="meal-list__item meal-list__soup"><dt>Canh</dt><dd>${escapeHtml(day.soup)}</dd></div>`
-            : ""
-        }
-        ${
-          day.side
-            ? `<div class="meal-list__item meal-list__side"><dt>Xào/luộc</dt><dd>${escapeHtml(day.side)}</dd></div>`
-            : ""
-        }
+        </div>${details}
       </dl>
     </article>
   `;

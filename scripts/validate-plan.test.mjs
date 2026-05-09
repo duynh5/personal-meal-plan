@@ -5,7 +5,6 @@ import { buildRollingPlan } from "./generate-meal-plan.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const validPlan = JSON.parse(fs.readFileSync(new URL("../meal-plan.json", import.meta.url), "utf8"));
-const menu = JSON.parse(fs.readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
 
 function clonePlan() {
   return structuredClone(validPlan);
@@ -123,14 +122,21 @@ describe("validatePlan", () => {
     assertValidationError(plan, /main repeats ".+" from the previous week/);
   });
 
-  it("accepts unavoidable main repeats from the previous week", () => {
+  it("rejects previous-week fish noodle repeats when other fish mains exist", () => {
     const plan = clonePlan();
-    const fishNoodleMains = menu.mains.filter((dish) => dish.group === "fish" && dish.starch === "noodle");
+    const fishNoodleDay = {
+      main: "bánh canh cá",
+      group: "fish",
+      groupLabel: "Cá",
+      starch: "noodle",
+      soup: null,
+      side: null
+    };
 
-    assert.deepEqual(fishNoodleMains.map((dish) => dish.name), ["bánh canh cá"]);
-    assert.equal(plan.weeks[0].days[3].main, "bánh canh cá");
-    assert.equal(plan.weeks[1].days[1].main, "bánh canh cá");
-    assert.doesNotThrow(() => validatePlan(plan));
+    Object.assign(plan.weeks[0].days[3], fishNoodleDay);
+    Object.assign(plan.weeks[1].days[1], fishNoodleDay);
+
+    assertValidationError(plan, /main repeats "bánh canh cá" from the previous week/);
   });
 
   it("does not let fallback bypass same-week main duplicate rules", () => {

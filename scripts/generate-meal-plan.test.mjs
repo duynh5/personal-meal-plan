@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
-import fs from "node:fs";
 import { describe, it } from "node:test";
 import { buildRollingPlan, chooseRotatedOptionForTest } from "./generate-meal-plan.mjs";
 import { validatePlan } from "./validate-plan.mjs";
-
-const menu = JSON.parse(fs.readFileSync(new URL("../data/menu.json", import.meta.url), "utf8"));
 
 function weekDishes(week) {
   return {
@@ -13,17 +10,6 @@ function weekDishes(week) {
     soups: new Set(week.days.map((day) => day.soup).filter(Boolean)),
     sides: new Set(week.days.map((day) => day.side).filter(Boolean))
   };
-}
-
-function mainOptionsFor(day) {
-  const group = day.vegetarianDay ? "vegetarian" : day.group;
-  let options = menu.mains.filter((dish) => dish.group === group && dish.starch === day.starch);
-
-  if (options.length === 0) {
-    options = menu.mains.filter((dish) => dish.group === group);
-  }
-
-  return options;
 }
 
 describe("buildRollingPlan", () => {
@@ -62,14 +48,16 @@ describe("buildRollingPlan", () => {
     assert.equal(choice, null);
   });
 
-  it("keeps starch balance when a vegetarian lunar day lands on a rice slot", () => {
+  it("keeps starch balance when a vegetarian lunar day is present", () => {
     const plan = buildRollingPlan(new Date("2026-06-12T01:00:00.000Z"));
     const firstDay = plan.weeks[0].days[0];
+    const firstWeekStarches = plan.weeks[0].days.map((day) => day.starch);
 
     assert.equal(firstDay.date, "2026-06-15");
     assert.equal(firstDay.vegetarianDay, true);
     assert.equal(firstDay.group, "vegetarian");
-    assert.equal(firstDay.starch, "rice");
+    assert.equal(firstWeekStarches.filter((starch) => starch === "rice").length, 3);
+    assert.equal(firstWeekStarches.filter((starch) => starch === "noodle").length, 2);
     assert.equal(plan.metadata.generatedAt, "2026-06-12T01:00:00.000Z");
     assert.doesNotThrow(() => validatePlan(plan));
   });
@@ -102,28 +90,15 @@ describe("buildRollingPlan", () => {
 
     for (let weekIndex = 1; weekIndex < plan.weeks.length; weekIndex += 1) {
       const previousWeekDishes = weekDishes(plan.weeks[weekIndex - 1]);
-      const weeklyRestrictedMains = new Set();
 
       for (const day of plan.weeks[weekIndex].days) {
         assert.equal(previousWeekDishes.breakfasts.has(day.breakfast), false, `${day.date} repeats breakfast`);
-        if (previousWeekDishes.mains.has(day.main)) {
-          const duplicateRestricted = day.group === "beefPork" || day.group === "chickenEgg";
-          const hasAlternative = mainOptionsFor(day).some(
-            (dish) =>
-              !previousWeekDishes.mains.has(dish.name) &&
-              (!duplicateRestricted || !weeklyRestrictedMains.has(dish.name))
-          );
-
-          assert.equal(hasAlternative, false, `${day.date} repeats main`);
-        }
+        assert.equal(previousWeekDishes.mains.has(day.main), false, `${day.date} repeats main`);
         if (day.soup) {
           assert.equal(previousWeekDishes.soups.has(day.soup), false, `${day.date} repeats soup`);
         }
         if (day.side) {
           assert.equal(previousWeekDishes.sides.has(day.side), false, `${day.date} repeats side`);
-        }
-        if (day.group === "beefPork" || day.group === "chickenEgg") {
-          weeklyRestrictedMains.add(day.main);
         }
       }
     }

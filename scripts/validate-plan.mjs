@@ -86,14 +86,8 @@ function assertFullWeekStarches(days, label, errors) {
   }
 }
 
-function mainOptionsFor(group, starch) {
-  let options = menuMains.filter((dish) => dish.group === group && dish.starch === starch);
-
-  if (options.length === 0) {
-    options = menuMains.filter((dish) => dish.group === group);
-  }
-
-  return options;
+function mainGroupOptionsFor(group) {
+  return menuMains.filter((dish) => dish.group === group);
 }
 
 function createWeekDishes() {
@@ -119,7 +113,7 @@ function hasNonPreviousMain(day, previousWeekDishes, weeklyRestrictedMains) {
   const group = day.vegetarianDay ? "vegetarian" : day.group;
   const duplicateRestricted = group === "beefPork" || group === "chickenEgg";
 
-  return mainOptionsFor(group, day.starch).some(
+  return mainGroupOptionsFor(group).some(
     (dish) =>
       !previousWeekDishes.mains.has(dish.name) &&
       (!duplicateRestricted || !weeklyRestrictedMains.has(dish.name))
