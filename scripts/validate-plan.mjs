@@ -2,19 +2,26 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import { readMenu } from "./meal-plan/menu.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(scriptPath);
 const rootDir = path.resolve(__dirname, "..");
 const planPath = path.join(rootDir, "meal-plan.json");
 const menuPath = path.join(rootDir, "data", "menu.json");
-const menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
-const menuBreakfasts = Array.isArray(menu.breakfasts) ? menu.breakfasts : [];
-const menuMains = Array.isArray(menu.mains) ? menu.mains : [];
-const menuSoups = Array.isArray(menu.soups) ? menu.soups : [];
-const menuSides = Array.isArray(menu.sides) ? menu.sides : [];
+const menu = readMenu(menuPath, {
+  allowedGroups: new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]),
+  allowedStarches: new Set(["rice", "noodle", "porridge"]),
+  minimumBreakfasts: 5,
+  requiredGroups: new Set(["fish", "beefPork", "chickenEgg"]),
+  requiredStarches: new Set(["rice", "noodle"])
+});
+const menuBreakfasts = menu.breakfastNames;
+const menuMains = menu.mains;
+const menuSoups = menu.soupNames;
+const menuSides = menu.sideNames;
 const breakfastNames = new Set(menuBreakfasts);
-const mainsByName = new Map(menuMains.map((dish) => [dish.name, dish]));
+const mainsByName = menu.mainsByName;
 const soupNames = new Set(menuSoups);
 const sideNames = new Set(menuSides);
 

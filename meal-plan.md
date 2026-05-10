@@ -15,7 +15,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 3 - 12/05/2026
 
 - Ngày âm: 26/3 âm lịch
-- Bữa sáng: xôi mặn
+- Bữa sáng: bánh mì má hải
 - Món mặn chính: cơm heo ba rọi kho
 - Món canh: canh xà lách xoong
 - Món xào/luộc: bông bí xào
@@ -23,13 +23,13 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 4 - 13/05/2026
 
 - Ngày âm: 27/3 âm lịch
-- Bữa sáng: xôi ngọt
+- Bữa sáng: bánh cuốn tây hồ
 - Món mặn chính: mì gà nước
 
 ### Thứ 5 - 14/05/2026
 
 - Ngày âm: 28/3 âm lịch
-- Bữa sáng: bánh mì má hải
+- Bữa sáng: bánh bao
 - Món mặn chính: cơm cá chưng tương + nắm mèo + bún tàu
 - Món canh: canh bí đỏ
 - Món xào/luộc: rau lang luộc
@@ -37,7 +37,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 6 - 15/05/2026
 
 - Ngày âm: 29/3 âm lịch
-- Bữa sáng: bánh cuốn tây hồ
+- Bữa sáng: bánh giò
 - Món mặn chính: mì heo xào
 
 ## Tuần 18/05/2026 - 22/05/2026
@@ -47,13 +47,13 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 2 - 18/05/2026
 
 - Ngày âm: 2/4 âm lịch
-- Bữa sáng: bánh mì bơ đg
+- Bữa sáng: xôi mặn
 - Món mặn chính: bún thịt nướng
 
 ### Thứ 3 - 19/05/2026
 
 - Ngày âm: 3/4 âm lịch
-- Bữa sáng: bánh bao
+- Bữa sáng: bánh mì bơ đg
 - Món mặn chính: cơm cá kho
 - Món canh: canh cải bó xôi
 - Món xào/luộc: măng vàng xào
@@ -61,7 +61,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 4 - 20/05/2026
 
 - Ngày âm: 4/4 âm lịch
-- Bữa sáng: bánh giò
+- Bữa sáng: bánh ướt
 - Món mặn chính: cơm gà kho gừng
 - Món canh: canh rau dền
 - Món xào/luộc: bắp cải xào
@@ -69,15 +69,15 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 5 - 21/05/2026
 
 - Ngày âm: 5/4 âm lịch
-- Bữa sáng: xôi chiên nc tương
+- Bữa sáng: há cảo tôm
 - Món mặn chính: bánh canh heo giò
 
 ### Thứ 6 - 22/05/2026
 
 - Ngày âm: 6/4 âm lịch
-- Bữa sáng: bánh ướt
+- Bữa sáng: tàu hủ
 - Món mặn chính: cơm cá kho
-- Món canh: canh cá thác lác thơm cà
+- Món canh: canh chua
 - Món xào/luộc: cà rốt luộc
 
 ## Tuần 25/05/2026 - 29/05/2026
@@ -89,7 +89,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 - Ngày âm: 9/4 âm lịch
 - Bữa sáng: xôi ngọt
 - Món mặn chính: cơm cá chiên
-- Món canh: canh nấm giò lụa
+- Món canh: canh cải xanh
 - Món xào/luộc: bông bí xào
 
 ### Thứ 3 - 26/05/2026
@@ -103,13 +103,13 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 - Ngày âm: 11/4 âm lịch
 - Bữa sáng: bánh cuốn tây hồ
 - Món mặn chính: cơm gà hấp muối
-- Món canh: canh rau muống tôm
+- Món canh: canh rau tần ô
 - Món xào/luộc: rau lang luộc
 
 ### Thứ 5 - 28/05/2026
 
 - Ngày âm: 12/4 âm lịch
-- Bữa sáng: bánh mì phomai chuối
+- Bữa sáng: bánh bao
 - Món mặn chính: cơm cá chưng tương + nắm mèo + bún tàu
 - Món canh: canh rau tần ô
 - Món xào/luộc: bầu luộc
@@ -117,7 +117,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 6 - 29/05/2026
 
 - Ngày âm: 13/4 âm lịch
-- Bữa sáng: bánh mì 7 hổ
+- Bữa sáng: bánh giò
 - Món mặn chính: bún chả giò
 
 ## Tuần 01/06/2026 - 05/06/2026
@@ -135,15 +135,15 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 3 - 02/06/2026
 
 - Ngày âm: 17/4 âm lịch
-- Bữa sáng: bánh bao
+- Bữa sáng: xôi chiên nc tương
 - Món mặn chính: cơm cá cơm kho + trứng chiên thịt bằm
-- Món canh: canh súp thịt heo
+- Món canh: canh khoai sọ
 - Món xào/luộc: đậu que luộc
 
 ### Thứ 4 - 03/06/2026
 
 - Ngày âm: 18/4 âm lịch
-- Bữa sáng: bánh giò
+- Bữa sáng: bánh ướt
 - Món mặn chính: cơm gà kho gừng
 - Món canh: canh khoai sọ
 - Món xào/luộc: rau muống xào
@@ -151,11 +151,11 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 5 - 04/06/2026
 
 - Ngày âm: 19/4 âm lịch
-- Bữa sáng: xôi chiên nc tương
+- Bữa sáng: há cảo tôm
 - Món mặn chính: bún heo mộc
 
 ### Thứ 6 - 05/06/2026
 
 - Ngày âm: 20/4 âm lịch
-- Bữa sáng: bánh ướt
+- Bữa sáng: tàu hủ
 - Món mặn chính: bánh canh cá

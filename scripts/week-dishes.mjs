@@ -1,6 +1,8 @@
 export function createWeekDishes() {
   return {
     breakfasts: new Set(),
+    breakfastCategoryCounts: new Map(),
+    lastBreakfast: null,
     mains: new Set(),
     soups: new Set(),
     sides: new Set()
@@ -9,10 +11,12 @@ export function createWeekDishes() {
 
 function createWeekDishesFromDays(days) {
   const dishes = createWeekDishes();
+  const sortedDays = [...days].sort((left, right) => left.date.localeCompare(right.date));
 
-  for (const day of days) {
+  for (const day of sortedDays) {
     if (typeof day.breakfast === "string") {
       dishes.breakfasts.add(day.breakfast);
+      dishes.lastBreakfast = day.breakfast;
     }
     if (typeof day.main === "string") {
       dishes.mains.add(day.main);

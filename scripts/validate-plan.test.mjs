@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { describe, it } from "node:test";
 import { buildRollingPlan } from "./generate-meal-plan.mjs";
+import { normalizeMenu } from "./meal-plan/menu.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const validPlan = JSON.parse(fs.readFileSync(new URL("../meal-plan.json", import.meta.url), "utf8"));
@@ -13,6 +14,62 @@ function clonePlan() {
 function assertValidationError(plan, pattern) {
   assert.throws(() => validatePlan(plan), pattern);
 }
+
+const menuOptions = {
+  allowedGroups: new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]),
+  allowedStarches: new Set(["rice", "noodle", "porridge"]),
+  minimumBreakfasts: 5,
+  requiredGroups: new Set(["fish", "beefPork", "chickenEgg"]),
+  requiredStarches: new Set(["rice", "noodle"])
+};
+
+function validMenu() {
+  return {
+    breakfasts: [
+      { name: "breakfast 1", category: "bread" },
+      { name: "breakfast 2", category: "stickyRice" },
+      { name: "breakfast 3", category: "riceCake" },
+      { name: "breakfast 4", category: "dumpling" },
+      { name: "breakfast 5", category: "tofu" }
+    ],
+    mains: [
+      { name: "fish rice", group: "fish", starch: "rice" },
+      { name: "beef rice", group: "beefPork", starch: "rice" },
+      { name: "egg rice", group: "chickenEgg", starch: "rice" },
+      { name: "veg rice", group: "vegetarian", starch: "rice" },
+      { name: "veg noodle", group: "vegetarian", starch: "noodle" }
+    ],
+    soups: [{ name: "light soup", profile: "light" }],
+    sides: ["boiled greens"]
+  };
+}
+
+describe("normalizeMenu", () => {
+  it("accepts breakfast categories and soup profiles", () => {
+    assert.doesNotThrow(() => normalizeMenu(validMenu(), menuOptions));
+  });
+
+  it("rejects breakfast entries without English category metadata", () => {
+    const menu = validMenu();
+    menu.breakfasts[0].category = "xôi";
+
+    assert.throws(() => normalizeMenu(menu, menuOptions), /breakfasts\[0\]\.category has invalid value/);
+  });
+
+  it("rejects soup entries without a valid profile", () => {
+    const menu = validMenu();
+    menu.soups[0].profile = "heavy";
+
+    assert.throws(() => normalizeMenu(menu, menuOptions), /soups\[0\]\.profile has invalid value "heavy"/);
+  });
+
+  it("rejects duplicate soup names after normalization", () => {
+    const menu = validMenu();
+    menu.soups.push({ name: "light soup", profile: "protein" });
+
+    assert.throws(() => normalizeMenu(menu, menuOptions), /soups\[1\]\.name duplicates "light soup"/);
+  });
+});
 
 describe("validatePlan", () => {
   it("accepts the checked-in rolling plan", () => {

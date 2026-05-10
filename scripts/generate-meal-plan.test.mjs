@@ -1,7 +1,16 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildRollingPlan, chooseRotatedOptionForTest } from "./generate-meal-plan.mjs";
+import { readMenu } from "./meal-plan/menu.mjs";
 import { validatePlan } from "./validate-plan.mjs";
+
+const menu = readMenu(new URL("../data/menu.json", import.meta.url), {
+  allowedGroups: new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]),
+  allowedStarches: new Set(["rice", "noodle", "porridge"]),
+  minimumBreakfasts: 5,
+  requiredGroups: new Set(["fish", "beefPork", "chickenEgg"]),
+  requiredStarches: new Set(["rice", "noodle"])
+});
 
 function weekDishes(week) {
   return {
@@ -70,6 +79,24 @@ describe("buildRollingPlan", () => {
 
       assert.equal(new Set(breakfasts).size, breakfasts.length);
     }
+  });
+
+  it("spreads breakfast categories within each week when options are available", () => {
+    const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"), { planVariant: "alt-1" });
+
+    for (const week of plan.weeks) {
+      const categories = week.days.map((day) => menu.breakfastByName.get(day.breakfast).category);
+
+      assert.equal(new Set(categories).size, categories.length);
+    }
+  });
+
+  it("prefers light soups for rice dinners", () => {
+    const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"), { planVariant: "alt-1" });
+    const soups = plan.weeks.flatMap((week) => week.days.map((day) => day.soup).filter(Boolean));
+
+    assert.ok(soups.length > 0);
+    assert.ok(soups.every((soup) => menu.soupByName.get(soup).profile === "light"));
   });
 
   it("uses a stable variant input to change deterministic choices", () => {

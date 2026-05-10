@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import { readMenu } from "./meal-plan/menu.mjs";
 import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
 import { fullWeekGroupPatterns, fullWeekStarchPatterns, groupPatternFor, rotatedStarchPatterns } from "./meal-plan/week-patterns.mjs";
 import { readPlanConfig } from "./plan-config.mjs";
@@ -26,7 +27,13 @@ const groupLabels = {
   vegetarian: "Chay"
 };
 const allowedStarches = new Set(["rice", "noodle", "porridge"]);
-const weekdaysPerWeek = 5, menu = JSON.parse(fs.readFileSync(menuPath, "utf8"));
+const menu = readMenu(menuPath, {
+  allowedGroups: new Set(Object.keys(groupLabels)),
+  allowedStarches,
+  minimumBreakfasts: 5,
+  requiredGroups: new Set(fullWeekGroupPatterns.flat()),
+  requiredStarches: new Set(fullWeekStarchPatterns.flat())
+});
 
 function pad(number) {
   return String(number).padStart(2, "0");
@@ -48,91 +55,6 @@ function addDays(date, days) {
   const next = new Date(date);
   next.setUTCDate(next.getUTCDate() + days);
   return next;
-}
-
-function validateMenu() {
-  const errors = [];
-  const allowedGroups = new Set(Object.keys(groupLabels));
-  const requiredGroups = new Set(fullWeekGroupPatterns.flat());
-  const requiredStarches = new Set(fullWeekStarchPatterns.flat());
-  const mains = Array.isArray(menu.mains) ? menu.mains : [];
-  const breakfasts = Array.isArray(menu.breakfasts) ? menu.breakfasts : [];
-  const soups = Array.isArray(menu.soups) ? menu.soups : [];
-  const sides = Array.isArray(menu.sides) ? menu.sides : [];
-
-  if (!Array.isArray(menu.breakfasts) || menu.breakfasts.length < weekdaysPerWeek) {
-    errors.push(`data/menu.json must include at least ${weekdaysPerWeek} breakfast entries.`);
-  }
-  if (!Array.isArray(menu.mains) || menu.mains.length === 0) {
-    errors.push("data/menu.json must include a non-empty mains array.");
-  }
-  if (!Array.isArray(menu.soups) || menu.soups.length === 0) {
-    errors.push("data/menu.json must include a non-empty soups array.");
-  }
-  if (!Array.isArray(menu.sides) || menu.sides.length === 0) {
-    errors.push("data/menu.json must include a non-empty sides array.");
-  }
-
-  const mainNames = new Set();
-  for (const [index, dish] of mains.entries()) {
-    const label = `mains[${index}]`;
-    if (!dish || typeof dish !== "object") {
-      errors.push(`${label} must be an object.`);
-      continue;
-    }
-    if (typeof dish.name !== "string" || dish.name.trim() === "") {
-      errors.push(`${label}.name must be a non-empty string.`);
-    } else if (dish.name !== dish.name.trim()) {
-      errors.push(`${label}.name must not have leading or trailing whitespace.`);
-    } else if (mainNames.has(dish.name.trim())) {
-      errors.push(`${label}.name duplicates "${dish.name.trim()}".`);
-    } else {
-      mainNames.add(dish.name.trim());
-    }
-    if (!allowedGroups.has(dish.group)) {
-      errors.push(`${label}.group must be one of: ${[...allowedGroups].join(", ")}.`);
-    }
-    if (!allowedStarches.has(dish.starch)) {
-      errors.push(`${label}.starch must be one of: ${[...allowedStarches].join(", ")}.`);
-    }
-  }
-
-  for (const group of requiredGroups) {
-    if (!mains.some((dish) => dish.group === group)) {
-      errors.push(`data/menu.json needs at least one ${group} main.`);
-    }
-  }
-  if (!mains.some((dish) => dish.group === "vegetarian")) {
-    errors.push("data/menu.json needs at least one vegetarian main.");
-  }
-  for (const starch of requiredStarches) {
-    if (!mains.some((dish) => dish.group === "vegetarian" && dish.starch === starch)) {
-      errors.push(`data/menu.json needs at least one vegetarian main with starch "${starch}".`);
-    }
-  }
-
-  for (const [field, items] of [
-    ["breakfasts", breakfasts],
-    ["soups", soups],
-    ["sides", sides]
-  ]) {
-    const names = new Set();
-    for (const [index, item] of items.entries()) {
-      if (typeof item !== "string" || item.trim() === "") {
-        errors.push(`${field}[${index}] must be a non-empty string.`);
-      } else if (item !== item.trim()) {
-        errors.push(`${field}[${index}] must not have leading or trailing whitespace.`);
-      } else if (names.has(item.trim())) {
-        errors.push(`${field}[${index}] duplicates "${item.trim()}".`);
-      } else {
-        names.add(item.trim());
-      }
-    }
-  }
-
-  if (errors.length > 0) {
-    throw new Error(`Invalid menu data:\n- ${errors.join("\n- ")}`);
-  }
 }
 
 function getVietnamDateParts(date = new Date()) {
@@ -240,6 +162,28 @@ function chooseRotatedOption(options, seed, isAllowed, isPreferred) {
   return null;
 }
 
+function chooseScoredOption(options, seed, isAllowed, scoreOption) {
+  const start = rotateIndex(seed, options.length);
+  let bestOption = null;
+  let bestScore = Number.POSITIVE_INFINITY;
+
+  for (let offset = 0; offset < options.length; offset += 1) {
+    const option = options[(start + offset) % options.length];
+
+    if (!isAllowed(option)) {
+      continue;
+    }
+
+    const score = scoreOption(option);
+    if (score < bestScore) {
+      bestOption = option;
+      bestScore = score;
+    }
+  }
+
+  return bestOption;
+}
+
 function mainOptionsFor(group, starch) {
   let options = menu.mains.filter((dish) => dish.group === group && dish.starch === starch);
 
@@ -345,19 +289,33 @@ function chooseSide(list, seed, previousWeekItems) {
   );
 }
 
-function chooseBreakfast(seed, usedBreakfasts, previousWeekBreakfasts) {
-  const breakfast = chooseRotatedOption(
+function chooseSoup(seed, previousWeekSoups) {
+  const soup = chooseScoredOption(
+    menu.soups,
+    seed,
+    () => true,
+    (item) => (previousWeekSoups.has(item.name) ? 100 : 0) + (item.profile === "protein" ? 10 : 0)
+  );
+
+  return soup?.name ?? null;
+}
+
+function chooseBreakfast(seed, weekDishes, previousWeekBreakfasts, previousBreakfastCategory) {
+  const breakfast = chooseScoredOption(
     menu.breakfasts,
     seed,
-    (item) => !usedBreakfasts.has(item),
-    (item) => !previousWeekBreakfasts.has(item)
+    (item) => !weekDishes.breakfasts.has(item.name),
+    (item) =>
+      (previousWeekBreakfasts.has(item.name) ? 1000 : 0) +
+      (weekDishes.breakfastCategoryCounts.get(item.category) ?? 0) * 50 +
+      (item.category === previousBreakfastCategory ? 10 : 0)
   );
 
   if (!breakfast) {
     throw new Error("Unable to choose a non-duplicate breakfast for the week.");
   }
 
-  return breakfast;
+  return breakfast.name;
 }
 
 export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred) {
@@ -366,17 +324,30 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
 
 function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, group, starch) {
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
-  const breakfast = chooseBreakfast(seed + weekIndex * 11, weekDishes.breakfasts, previousWeekDishes.breakfasts);
+  const previousBreakfastName = weekDishes.lastBreakfast ?? previousWeekDishes.lastBreakfast;
+  const previousBreakfastCategory = menu.breakfastByName.get(previousBreakfastName)?.category;
+  const breakfast = chooseBreakfast(
+    seed + weekIndex * 11,
+    weekDishes,
+    previousWeekDishes.breakfasts,
+    previousBreakfastCategory
+  );
   const vegetarianDay = isVegetarianLunarDay(date);
   const dish = vegetarianDay
     ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains)
     : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains);
 
   weekDishes.breakfasts.add(breakfast);
+  weekDishes.lastBreakfast = breakfast;
+  const breakfastCategory = menu.breakfastByName.get(breakfast).category;
+  weekDishes.breakfastCategoryCounts.set(
+    breakfastCategory,
+    (weekDishes.breakfastCategoryCounts.get(breakfastCategory) ?? 0) + 1
+  );
   weekDishes.mains.add(dish.name);
 
   const hasRiceSides = !vegetarianDay && dish.starch === "rice";
-  const soup = hasRiceSides ? chooseSide(menu.soups, seed + 3, previousWeekDishes.soups) : null;
+  const soup = hasRiceSides ? chooseSoup(seed + 3, previousWeekDishes.soups) : null;
   const side = hasRiceSides ? chooseSide(menu.sides, seed + 7, previousWeekDishes.sides) : null;
 
   if (soup) {
@@ -456,7 +427,6 @@ function buildPlanFromDays(days, metadata, seedOffset, initialPreviousWeekDishes
 
 export function buildRollingPlan(runDate = new Date(), options = {}) {
   assertValidDate(runDate, "runDate");
-  validateMenu();
 
   const startDate = nextMondayOnOrAfter(currentVietnamDate(runDate));
   const endDate = addDays(startDate, rollingWeekCount * 7 - 1);

@@ -13,6 +13,13 @@ node scripts/render-site.mjs
 
 Mo `site/index.html` de xem giao dien local.
 
+## Du lieu menu
+
+- `data/menu.json` la nguon du lieu mon an.
+- `breakfasts` dung object `{ "name", "category" }`; `category` la nhan tieng Anh de script rai deu loai bua sang.
+- `soups` dung object `{ "name", "profile" }`; `profile` la `light` hoac `protein` de uu tien canh nhe khi an com.
+- Ke hoach xuat ra van giu ten mon an dang chuoi, khong hien cac nhan metadata nay.
+
 ## Tu dong tren GitHub
 
 - `.github/workflows/rolling-plan.yml` chay luc 08:00 gio Viet Nam moi thu 6.
