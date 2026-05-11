@@ -11,39 +11,10 @@ const printButton = document.querySelector("#print-button");
 const todayButton = document.querySelector("#today-button");
 const topButton = document.querySelector("#top-button");
 const notesToggle = document.querySelector("#notes-toggle");
-const themeButtons = Array.from(document.querySelectorAll(".theme-toggle__button"));
 const weekNavLinks = Array.from(document.querySelectorAll(".week-nav__link"));
 const weekSections = Array.from(document.querySelectorAll(".week-section[data-week]"));
 const notesLists = Array.from(document.querySelectorAll(".notes"));
-const themeStorageKey = "meal-plan-theme";
 const notesStorageKey = "meal-plan-hide-notes";
-
-const defaultTheme = "fresh";
-const savedTheme = window.localStorage.getItem(themeStorageKey);
-const activeTheme = themeButtons.some((button) => button.dataset.theme === savedTheme)
-  ? savedTheme
-  : defaultTheme;
-
-function applyTheme(themeName) {
-  document.body.dataset.theme = themeName;
-  window.localStorage.setItem(themeStorageKey, themeName);
-
-  for (const button of themeButtons) {
-    const isActive = button.dataset.theme === themeName;
-    button.classList.toggle("is-active", isActive);
-    button.setAttribute("aria-pressed", String(isActive));
-  }
-}
-
-if (themeButtons.length > 0) {
-  applyTheme(activeTheme);
-
-  for (const button of themeButtons) {
-    button.addEventListener("click", () => {
-      applyTheme(button.dataset.theme ?? defaultTheme);
-    });
-  }
-}
 
 function applyNotesVisibility(hideNotes) {
   for (const notes of notesLists) {
