@@ -10,11 +10,6 @@
   color: var(--blue);
 }
 
-#notes-toggle {
-  background: var(--gold-soft);
-  color: var(--gold);
-}
-
 #top-button {
   background: var(--surface-soft);
   color: var(--muted);
@@ -75,10 +70,6 @@
 .legend__side {
   background: var(--side-soft);
   color: var(--side);
-}
-
-.notes.is-hidden {
-  display: none;
 }
 
 @media (max-width: 760px) {

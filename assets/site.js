@@ -10,22 +10,8 @@ const status = document.querySelector("#today-status");
 const printButton = document.querySelector("#print-button");
 const todayButton = document.querySelector("#today-button");
 const topButton = document.querySelector("#top-button");
-const notesToggle = document.querySelector("#notes-toggle");
 const weekNavLinks = Array.from(document.querySelectorAll(".week-nav__link"));
 const weekSections = Array.from(document.querySelectorAll(".week-section[data-week]"));
-const notesLists = Array.from(document.querySelectorAll(".notes"));
-const notesStorageKey = "meal-plan-hide-notes";
-
-function applyNotesVisibility(hideNotes) {
-  for (const notes of notesLists) {
-    notes.classList.toggle("is-hidden", hideNotes);
-  }
-
-  if (notesToggle) {
-    notesToggle.textContent = hideNotes ? "Hiện ghi chú" : "Ẩn ghi chú";
-    notesToggle.setAttribute("aria-pressed", String(hideNotes));
-  }
-}
 
 function setActiveWeek(weekId) {
   for (const link of weekNavLinks) {
@@ -58,17 +44,6 @@ if (weekSections.length > 0 && weekNavLinks.length > 0) {
   for (const section of weekSections) {
     observer.observe(section);
   }
-}
-
-if (notesToggle && notesLists.length > 0) {
-  const hideNotesOnLoad = window.localStorage.getItem(notesStorageKey) === "true";
-  applyNotesVisibility(hideNotesOnLoad);
-
-  notesToggle.addEventListener("click", () => {
-    const nextState = !notesLists[0].classList.contains("is-hidden");
-    applyNotesVisibility(nextState);
-    window.localStorage.setItem(notesStorageKey, String(nextState));
-  });
 }
 
 if (status && todayCard) {

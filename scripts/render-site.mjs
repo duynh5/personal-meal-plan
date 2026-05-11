@@ -162,7 +162,6 @@ function renderHtml(plan) {
       <div class="toolbar">
         <p id="today-status">Đang kiểm tra ngày hôm nay...</p>
         <div class="toolbar-actions">
-          <button type="button" id="notes-toggle">Ẩn ghi chú</button>
           <button type="button" id="today-button">Đến hôm nay</button>
           <button type="button" id="top-button">Lên đầu trang</button>
           <button type="button" id="print-button">In / lưu PDF</button>
