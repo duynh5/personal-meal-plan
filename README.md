@@ -13,6 +13,12 @@ node scripts/render-site.mjs
 
 Mo `site/index.html` de xem giao dien local.
 
+## Giao dien web
+
+- Co bo chuyen theme mau: `Tuoi`, `Em`, `Ro` (luu lua chon tren trinh duyet).
+- Thanh thao tac gom: an/hien ghi chu, den mon hom nay, len dau trang, in/luu PDF.
+- Tren mobile, dieu huong tuan duoc toi uu cho cuon ngang va tu dong danh dau tuan dang xem.
+
 ## Du lieu menu
 
 - `data/menu.json` la nguon du lieu mon an.
