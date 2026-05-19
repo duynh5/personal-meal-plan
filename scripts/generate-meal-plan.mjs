@@ -123,6 +123,10 @@ function groupByWeek(days) {
   return weeks;
 }
 
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 function rotateIndex(seed, length) {
   return Math.abs(seed) % length;
 }
@@ -400,50 +404,132 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, g
   };
 }
 
-function buildPlanFromDays(days, metadata, seedOffset, initialPreviousWeekDishes = createWeekDishes()) {
-  const weeks = [];
-  let previousWeekDishes = initialPreviousWeekDishes;
+function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishes) {
+  const weekDishes = createWeekDishes();
+  const groupPattern = groupPatternFor(weekIndex);
+  const starchPattern = chooseWeekStarchPattern(weekDates, weekIndex, seedOffset, previousWeekDishes);
+  const days = weekDates.map((date, dayIndex) =>
+    buildDay(
+      date,
+      weekIndex,
+      seedOffset,
+      weekDishes,
+      previousWeekDishes,
+      groupPattern[dayIndex],
+      starchPattern[dayIndex]
+    )
+  );
+  const vegetarianDays = days.filter((day) => day.vegetarianDay);
+  const notes = [];
 
-  for (const [weekIndex, week] of groupByWeek(days).entries()) {
-    const weekDishes = createWeekDishes();
-    const groupPattern = groupPatternFor(weekIndex);
-    const starchPattern = chooseWeekStarchPattern(week.days, weekIndex, seedOffset, previousWeekDishes);
-    const days = week.days.map((date, dayIndex) =>
-      buildDay(
-        date,
-        weekIndex,
-        seedOffset,
-        weekDishes,
-        previousWeekDishes,
-        groupPattern[dayIndex],
-        starchPattern[dayIndex]
-      )
+  if (days.length < 5) {
+    notes.push("Tuần chưa đủ 5 ngày ăn trong giai đoạn kế hoạch.");
+  }
+  if (vegetarianDays.length > 0) {
+    notes.push(
+      `Có ngày chay âm lịch: ${vegetarianDays
+        .map((day) => `${day.weekday} ${day.displayDate}`)
+        .join(", ")}.`
     );
-    const vegetarianDays = days.filter((day) => day.vegetarianDay);
-    const notes = [];
+  } else {
+    notes.push("Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.");
+  }
 
-    if (days.length < 5) {
-      notes.push("Tuần chưa đủ 5 ngày ăn trong giai đoạn kế hoạch.");
-    }
-    if (vegetarianDays.length > 0) {
-      notes.push(
-        `Có ngày chay âm lịch: ${vegetarianDays
-          .map((day) => `${day.weekday} ${day.displayDate}`)
-          .join(", ")}.`
-      );
-    } else {
-      notes.push("Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.");
-    }
-
-    weeks.push({
+  return {
+    week: {
       startDate: days[0].displayDate,
       endDate: days[days.length - 1].displayDate,
       title: `Tuần ${days[0].displayDate} - ${days[days.length - 1].displayDate}`,
       notes,
       days
-    });
+    },
+    weekDishes
+  };
+}
 
-    previousWeekDishes = weekDishes;
+function createWeekDishesFromWeek(week) {
+  const dishes = createWeekDishes();
+  const days = Array.isArray(week?.days) ? [...week.days] : [];
+  days.sort((left, right) => left.date.localeCompare(right.date));
+
+  for (const day of days) {
+    if (isNonEmptyString(day?.breakfast)) {
+      dishes.breakfasts.add(day.breakfast);
+      dishes.lastBreakfast = day.breakfast;
+    }
+    if (isNonEmptyString(day?.main)) {
+      dishes.mains.add(day.main);
+    }
+    if (isNonEmptyString(day?.soup)) {
+      dishes.soups.add(day.soup);
+      dishes.lastSoup = day.soup;
+    }
+    if (isNonEmptyString(day?.side)) {
+      dishes.sides.add(day.side);
+      dishes.lastSide = day.side;
+    }
+  }
+
+  return dishes;
+}
+
+function reusableWeeksByStartDate(previousPlan) {
+  if (!previousPlan || !Array.isArray(previousPlan.weeks)) {
+    return new Map();
+  }
+
+  const byStartDate = new Map();
+
+  for (const week of previousPlan.weeks) {
+    if (!Array.isArray(week?.days) || week.days.length === 0) {
+      continue;
+    }
+
+    const firstDay = week.days[0];
+    if (!isNonEmptyString(firstDay?.date)) {
+      continue;
+    }
+
+    byStartDate.set(firstDay.date, week);
+  }
+
+  return byStartDate;
+}
+
+function weekMatchesDates(week, expectedDates) {
+  if (!Array.isArray(week?.days) || week.days.length !== expectedDates.length) {
+    return false;
+  }
+
+  return week.days.every((day, index) => day?.date === expectedDates[index]);
+}
+
+function buildPlanFromDays(
+  days,
+  metadata,
+  seedOffset,
+  initialPreviousWeekDishes = createWeekDishes(),
+  previousPlan = null
+) {
+  const weeks = [];
+  const weeksByStartDate = reusableWeeksByStartDate(previousPlan);
+  let previousWeekDishes = initialPreviousWeekDishes;
+  let canReuseWeek = true;
+
+  for (const [weekIndex, week] of groupByWeek(days).entries()) {
+    const expectedDates = week.days.map(toIsoDate);
+    const reusableWeek = weeksByStartDate.get(week.key);
+
+    if (canReuseWeek && reusableWeek && weekMatchesDates(reusableWeek, expectedDates)) {
+      weeks.push(reusableWeek);
+      previousWeekDishes = createWeekDishesFromWeek(reusableWeek);
+      continue;
+    }
+
+    canReuseWeek = false;
+    const generatedWeek = createGeneratedWeek(week.days, weekIndex, seedOffset, previousWeekDishes);
+    weeks.push(generatedWeek.week);
+    previousWeekDishes = generatedWeek.weekDishes;
   }
 
   return {
@@ -472,7 +558,7 @@ export function buildRollingPlan(runDate = new Date(), options = {}) {
     timezone: timeZone,
     generatedAt: runDate.toISOString(),
     ...(planVariant ? { planVariant: String(planVariant) } : {})
-  }, seedOffset, previousWeekDishes);
+  }, seedOffset, previousWeekDishes, options?.previousPlan ?? null);
 }
 
 if (process.argv[1] === scriptPath) {

@@ -201,4 +201,24 @@ describe("buildRollingPlan", () => {
   it("rejects invalid run dates", () => {
     assert.throws(() => buildRollingPlan(new Date("not-a-date")), /runDate must be a valid Date/);
   });
+
+  it("reuses overlapping weeks from the previous plan and only generates missing future weeks", () => {
+    const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
+    const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: firstRun });
+
+    assert.equal(firstRun.metadata.startDate, "2026-05-25");
+    assert.equal(secondRun.metadata.startDate, "2026-06-01");
+    assert.deepEqual(secondRun.weeks.slice(0, 3), firstRun.weeks.slice(1, 4));
+    assert.doesNotThrow(() => validatePlan(secondRun));
+  });
+
+  it("does not reuse mismatched previous-week blocks", () => {
+    const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
+    const mismatchedPreviousPlan = structuredClone(firstRun);
+    mismatchedPreviousPlan.weeks[1].days[0].date = "2026-06-02";
+    const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: mismatchedPreviousPlan });
+
+    assert.notDeepEqual(secondRun.weeks[0], firstRun.weeks[1]);
+    assert.doesNotThrow(() => validatePlan(secondRun));
+  });
 });

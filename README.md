@@ -31,6 +31,7 @@ Mo `site/index.html` de xem giao dien local.
 
 - `.github/workflows/rolling-plan.yml` chay luc 08:00 gio Viet Nam moi thu 6.
 - Script sinh ke hoach cho 4 tuan ke tiep theo `Asia/Ho_Chi_Minh`.
+- Khi `meal-plan.json` da co du lieu chong lap, script giu nguyen cac tuan da cong bo va chi sinh them cac tuan con thieu de du 4 tuan.
 - Workflow validate `meal-plan.json` truoc khi render site.
 - Workflow commit lai `meal-plan.md`, `meal-plan.json`, va `site/`.
 - `.github/workflows/pages.yml` publish thu muc `site/` len GitHub Pages sau khi rolling workflow hoan tat thanh cong.
