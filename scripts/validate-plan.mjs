@@ -118,13 +118,15 @@ function hasNonPreviousBreakfast(previousWeekDishes, weeklyBreakfasts) {
 
 function hasNonPreviousMain(day, previousWeekDishes, weeklyRestrictedMains) {
   const group = day.vegetarianDay ? "vegetarian" : day.group;
-  const duplicateRestricted = group === "beefPork" || group === "chickenEgg";
 
   return mainGroupOptionsFor(group).some(
-    (dish) =>
-      !previousWeekDishes.mains.has(dish.name) &&
-      (!duplicateRestricted || !weeklyRestrictedMains.has(dish.name))
+    (dish) => !previousWeekDishes.mains.has(dish.name) && !weeklyRestrictedMains.has(dish.name)
   );
+}
+
+function hasNonWeeklyMain(day, weeklyMains) {
+  const group = day.vegetarianDay ? "vegetarian" : day.group;
+  return mainGroupOptionsFor(group).some((dish) => !weeklyMains.has(dish.name));
 }
 
 function expectedVegetarianNote(days) {
@@ -273,7 +275,6 @@ export function validatePlan(plan) {
     let hasVegetarianMain = false;
     const weekDishes = createWeekDishes();
     const weeklyBreakfasts = new Set();
-    const duplicateRestrictedDishes = new Set();
     const firstDay = week.days[0];
     const lastDay = week.days[week.days.length - 1];
 
@@ -363,14 +364,16 @@ export function validatePlan(plan) {
           errors.push(`${dayLabel}.main metadata must match data/menu.json.`);
         }
       }
-      if (
-        isNonEmptyString(day.main) &&
-        previousWeekDishes.mains.has(day.main) &&
-        hasNonPreviousMain(day, previousWeekDishes, duplicateRestrictedDishes)
-      ) {
-        errors.push(`${dayLabel}.main repeats "${day.main}" from the previous week.`);
-      }
       if (isNonEmptyString(day.main)) {
+        if (weekDishes.mains.has(day.main) && hasNonWeeklyMain(day, weekDishes.mains)) {
+          errors.push(`${dayLabel}.main repeats "${day.main}" in the same week.`);
+        }
+        if (
+          previousWeekDishes.mains.has(day.main) &&
+          hasNonPreviousMain(day, previousWeekDishes, weekDishes.mains)
+        ) {
+          errors.push(`${dayLabel}.main repeats "${day.main}" from the previous week.`);
+        }
         weekDishes.mains.add(day.main);
       }
       if (day.vegetarianDay) {
@@ -389,13 +392,6 @@ export function validatePlan(plan) {
       if (!allowedStarches.has(day.starch)) {
         errors.push(`${dayLabel}.starch must be one of: ${[...allowedStarches].join(", ")}.`);
       }
-      if (day.group === "beefPork" || day.group === "chickenEgg") {
-        if (duplicateRestrictedDishes.has(day.main)) {
-          errors.push(`${dayLabel} repeats "${day.main}" in the same week.`);
-        }
-        duplicateRestrictedDishes.add(day.main);
-      }
-
       if (day.starch === "rice" && !day.vegetarianDay && (!day.soup || !day.side)) {
         errors.push(`${dayLabel} rice meal must include soup and side.`);
       }
@@ -416,6 +412,13 @@ export function validatePlan(plan) {
         hasNonPreviousItem(menuSoups, previousWeekDishes.soups)
       ) {
         errors.push(`${dayLabel}.soup repeats "${day.soup}" from the previous week.`);
+      }
+      if (
+        isNonEmptyString(day.side) &&
+        weekDishes.sides.has(day.side) &&
+        hasNonPreviousItem(menuSides, weekDishes.sides)
+      ) {
+        errors.push(`${dayLabel}.side repeats "${day.side}" in the same week.`);
       }
       if (
         isNonEmptyString(day.side) &&

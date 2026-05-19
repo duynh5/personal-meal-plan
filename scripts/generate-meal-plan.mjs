@@ -185,13 +185,11 @@ function chooseScoredOption(options, seed, isAllowed, scoreOption) {
 }
 
 function mainOptionsFor(group, starch) {
-  let options = menu.mains.filter((dish) => dish.group === group && dish.starch === starch);
+  return menu.mains.filter((dish) => dish.group === group && dish.starch === starch);
+}
 
-  if (options.length === 0) {
-    options = menu.mains.filter((dish) => dish.group === group);
-  }
-
-  return options;
+function mainDishScore(dish, usedNames, previousWeekMains) {
+  return (usedNames.has(dish.name) ? 1000 : 0) + (previousWeekMains.has(dish.name) ? 500 : 0);
 }
 
 function isVegetarianLunarDay(date) {
@@ -206,17 +204,30 @@ function isVegetarianLunarDay(date) {
 }
 
 function findDish(group, starch, seed, usedNames, previousWeekMains) {
-  const options = mainOptionsFor(group, starch);
-  const duplicateRestricted = group === "beefPork" || group === "chickenEgg";
-  const dish = chooseRotatedOption(
-    options,
+  const starchOptions = mainOptionsFor(group, starch);
+  const groupOptions = menu.mains.filter((dish) => dish.group === group);
+  const starchDish = chooseScoredOption(
+    starchOptions,
     seed,
-    (option) => !duplicateRestricted || !usedNames.has(option.name),
-    (option) => !previousWeekMains.has(option.name)
+    () => true,
+    (option) => mainDishScore(option, usedNames, previousWeekMains)
   );
+  const anyStarchDish = chooseScoredOption(
+    groupOptions,
+    seed,
+    () => true,
+    (option) =>
+      mainDishScore(option, usedNames, previousWeekMains) + (option.starch === starch ? 0 : 300)
+  );
+  const dish = anyStarchDish
+    && (!starchDish
+      || mainDishScore(anyStarchDish, usedNames, previousWeekMains)
+        < mainDishScore(starchDish, usedNames, previousWeekMains))
+    ? anyStarchDish
+    : starchDish;
 
   if (!dish) {
-    throw new Error(`Unable to choose a non-duplicate ${group} main for starch "${starch}".`);
+    throw new Error(`Unable to choose a ${group} main for starch "${starch}".`);
   }
 
   return dish;
@@ -270,7 +281,10 @@ function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishe
 }
 
 function chooseVegetarianDish(starch, seed, previousWeekMains) {
-  const dishes = mainOptionsFor("vegetarian", starch);
+  const starchOptions = mainOptionsFor("vegetarian", starch);
+  const dishes = starchOptions.length > 0
+    ? starchOptions
+    : menu.mains.filter((dish) => dish.group === "vegetarian");
 
   return chooseRotatedOption(
     dishes,
@@ -280,21 +294,28 @@ function chooseVegetarianDish(starch, seed, previousWeekMains) {
   );
 }
 
-function chooseSide(list, seed, previousWeekItems) {
-  return chooseRotatedOption(
+function chooseSide(list, seed, weekItems, previousWeekItems, previousSide) {
+  return chooseScoredOption(
     list,
     seed,
     () => true,
-    (item) => !previousWeekItems.has(item)
+    (item) =>
+      (weekItems.has(item) ? 1000 : 0) +
+      (previousWeekItems.has(item) ? 500 : 0) +
+      (item === previousSide ? 100 : 0)
   );
 }
 
-function chooseSoup(seed, previousWeekSoups) {
+function chooseSoup(seed, weekSoups, previousWeekSoups, previousSoup) {
   const soup = chooseScoredOption(
     menu.soups,
     seed,
     () => true,
-    (item) => (previousWeekSoups.has(item.name) ? 100 : 0) + (item.profile === "protein" ? 10 : 0)
+    (item) =>
+      (weekSoups.has(item.name) ? 1000 : 0) +
+      (previousWeekSoups.has(item.name) ? 500 : 0) +
+      (item.name === previousSoup ? 100 : 0) +
+      (item.profile === "protein" ? 10 : 0)
   );
 
   return soup?.name ?? null;
@@ -347,14 +368,20 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, g
   weekDishes.mains.add(dish.name);
 
   const hasRiceSides = !vegetarianDay && dish.starch === "rice";
-  const soup = hasRiceSides ? chooseSoup(seed + 3, previousWeekDishes.soups) : null;
-  const side = hasRiceSides ? chooseSide(menu.sides, seed + 7, previousWeekDishes.sides) : null;
+  const previousSoup = weekDishes.lastSoup ?? previousWeekDishes.lastSoup;
+  const previousSide = weekDishes.lastSide ?? previousWeekDishes.lastSide;
+  const soup = hasRiceSides ? chooseSoup(seed + 3, weekDishes.soups, previousWeekDishes.soups, previousSoup) : null;
+  const side = hasRiceSides
+    ? chooseSide(menu.sides, seed + 7, weekDishes.sides, previousWeekDishes.sides, previousSide)
+    : null;
 
   if (soup) {
     weekDishes.soups.add(soup);
+    weekDishes.lastSoup = soup;
   }
   if (side) {
     weekDishes.sides.add(side);
+    weekDishes.lastSide = side;
   }
 
   return {

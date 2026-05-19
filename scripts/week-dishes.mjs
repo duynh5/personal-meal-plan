@@ -5,7 +5,9 @@ export function createWeekDishes() {
     lastBreakfast: null,
     mains: new Set(),
     soups: new Set(),
-    sides: new Set()
+    lastSoup: null,
+    sides: new Set(),
+    lastSide: null
   };
 }
 
@@ -23,9 +25,11 @@ function createWeekDishesFromDays(days) {
     }
     if (typeof day.soup === "string") {
       dishes.soups.add(day.soup);
+      dishes.lastSoup = day.soup;
     }
     if (typeof day.side === "string") {
       dishes.sides.add(day.side);
+      dishes.lastSide = day.side;
     }
   }
 

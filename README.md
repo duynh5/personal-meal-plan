@@ -25,6 +25,7 @@ Mo `site/index.html` de xem giao dien local.
 - `breakfasts` dung object `{ "name", "category" }`; `category` la nhan tieng Anh de script rai deu loai bua sang.
 - `soups` dung object `{ "name", "profile" }`; `profile` la `light` hoac `protein` de uu tien canh nhe khi an com.
 - Ke hoach xuat ra van giu ten mon an dang chuoi, khong hien cac nhan metadata nay.
+- Khi con lua chon hop le, script uu tien tranh trung `breakfast`, `main`, va `side` trong cung tuan va so voi tuan lien truoc.
 
 ## Tu dong tren GitHub
 

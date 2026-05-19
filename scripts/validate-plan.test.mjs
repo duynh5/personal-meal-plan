@@ -15,6 +15,32 @@ function assertValidationError(plan, pattern) {
   assert.throws(() => validatePlan(plan), pattern);
 }
 
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function firstDayIsoDate(plan) {
+  return plan.weeks[0].days[0].date;
+}
+
+function firstRiceDay(week) {
+  const day = week.days.find((candidate) => candidate.starch === "rice" && !candidate.vegetarianDay);
+  if (!day) {
+    throw new Error("Expected at least one non-vegetarian rice day in the week fixture.");
+  }
+
+  return day;
+}
+
+function firstTwoRiceDays(week) {
+  const days = week.days.filter((candidate) => candidate.starch === "rice" && !candidate.vegetarianDay);
+  if (days.length < 2) {
+    throw new Error("Expected at least two non-vegetarian rice days in the week fixture.");
+  }
+
+  return days;
+}
+
 const menuOptions = {
   allowedGroups: new Set(["fish", "beefPork", "chickenEgg", "vegetarian"]),
   allowedStarches: new Set(["rice", "noodle", "porridge"]),
@@ -78,9 +104,10 @@ describe("validatePlan", () => {
 
   it("rejects a display date that does not match the ISO date", () => {
     const plan = clonePlan();
+    const expectedDate = firstDayIsoDate(plan);
     plan.weeks[0].days[0].displayDate = "12/05/2026";
 
-    assertValidationError(plan, /displayDate does not match 2026-05-11/);
+    assertValidationError(plan, new RegExp(`displayDate does not match ${escapeRegExp(expectedDate)}`));
   });
 
   it("rejects a group label that does not match the group key", () => {
@@ -92,9 +119,10 @@ describe("validatePlan", () => {
 
   it("rejects a lunar label that does not match the date", () => {
     const plan = clonePlan();
+    const expectedDate = firstDayIsoDate(plan);
     plan.weeks[0].days[0].lunarDate = "1/1 âm lịch";
 
-    assertValidationError(plan, /lunarDate does not match 2026-05-11/);
+    assertValidationError(plan, new RegExp(`lunarDate does not match ${escapeRegExp(expectedDate)}`));
   });
 
   it("rejects date-only generatedAt metadata", () => {
@@ -120,9 +148,13 @@ describe("validatePlan", () => {
 
   it("rejects a title that does not match the start date", () => {
     const plan = clonePlan();
+    const expectedTitle = plan.metadata.title;
     plan.metadata.title = "Kế hoạch ăn 4 tuần từ 12/05/2026";
 
-    assertValidationError(plan, /metadata\.title must be "Kế hoạch ăn 4 tuần từ 11\/05\/2026"/);
+    assertValidationError(
+      plan,
+      new RegExp(`metadata\\.title must be "${escapeRegExp(expectedTitle)}"`)
+    );
   });
 
   it("rejects a blank main dish", () => {
@@ -217,16 +249,28 @@ describe("validatePlan", () => {
 
   it("rejects avoidable soup repeats from the previous week", () => {
     const plan = clonePlan();
-    plan.weeks[1].days[0].soup = plan.weeks[0].days[0].soup;
+    const sourceDay = firstRiceDay(plan.weeks[0]);
+    const targetDay = firstRiceDay(plan.weeks[1]);
+    targetDay.soup = sourceDay.soup;
 
     assertValidationError(plan, /soup repeats ".+" from the previous week/);
   });
 
   it("rejects avoidable side repeats from the previous week", () => {
     const plan = clonePlan();
-    plan.weeks[1].days[0].side = plan.weeks[0].days[0].side;
+    const sourceDay = firstRiceDay(plan.weeks[0]);
+    const targetDay = firstRiceDay(plan.weeks[1]);
+    targetDay.side = sourceDay.side;
 
     assertValidationError(plan, /side repeats ".+" from the previous week/);
+  });
+
+  it("rejects avoidable side repeats in the same week", () => {
+    const plan = clonePlan();
+    const [sourceDay, targetDay] = firstTwoRiceDays(plan.weeks[0]);
+    targetDay.side = sourceDay.side;
+
+    assertValidationError(plan, /side repeats ".+" in the same week/);
   });
 
   it("keeps non-vegetarian weekly group caps when a vegetarian meal is present", () => {

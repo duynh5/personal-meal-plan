@@ -81,6 +81,18 @@ describe("buildRollingPlan", () => {
     }
   });
 
+  it("does not repeat mains or sides within a week when alternatives exist", () => {
+    const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"), { planVariant: "alt-1" });
+
+    for (const week of plan.weeks) {
+      const mains = week.days.map((day) => day.main);
+      const sides = week.days.map((day) => day.side).filter(Boolean);
+
+      assert.equal(new Set(mains).size, mains.length);
+      assert.equal(new Set(sides).size, sides.length);
+    }
+  });
+
   it("spreads breakfast categories within each week when options are available", () => {
     const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"), { planVariant: "alt-1" });
 
