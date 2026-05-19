@@ -87,7 +87,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 2 - 01/06/2026
 
 - Ngày âm: 16/4 âm lịch
-- Bữa sáng: bánh mì phomai chuối
+- Bữa sáng: xôi bắp
 - Món mặn chính: cơm cá cơm kho + trứng chiên thịt bằm
 - Món canh: canh bầu
 - Món xào/luộc: đậu que xào
@@ -95,29 +95,29 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 3 - 02/06/2026
 
 - Ngày âm: 17/4 âm lịch
-- Bữa sáng: há cảo tôm
+- Bữa sáng: bánh mì má hải
 - Món mặn chính: bún thịt nướng
 
 ### Thứ 4 - 03/06/2026
 
 - Ngày âm: 18/4 âm lịch
-- Bữa sáng: xôi bắp
+- Bữa sáng: bánh cuốn tây hồ
 - Món mặn chính: cơm gà kho gừng
-- Món canh: canh khoai sọ
+- Món canh: canh cải bó xôi
 - Món xào/luộc: bông bí xào
 
 ### Thứ 5 - 04/06/2026
 
 - Ngày âm: 19/4 âm lịch
-- Bữa sáng: bánh cuốn tây hồ
+- Bữa sáng: bánh bao
 - Món mặn chính: bánh canh cá
 
 ### Thứ 6 - 05/06/2026
 
 - Ngày âm: 20/4 âm lịch
-- Bữa sáng: bánh bao
+- Bữa sáng: xôi mặn
 - Món mặn chính: cơm heo cốt lết chiên
-- Món canh: canh rau dền
+- Món canh: canh rau mồng tơi
 - Món xào/luộc: rau lang luộc
 
 ## Tuần 08/06/2026 - 12/06/2026
@@ -127,35 +127,35 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 ### Thứ 2 - 08/06/2026
 
 - Ngày âm: 23/4 âm lịch
-- Bữa sáng: bánh mì 7 hổ
+- Bữa sáng: bánh mì bơ đg
 - Món mặn chính: bún chả giò
 
 ### Thứ 3 - 09/06/2026
 
 - Ngày âm: 24/4 âm lịch
-- Bữa sáng: hoành thánh
+- Bữa sáng: xôi ngọt
 - Món mặn chính: cơm cá kho
-- Món canh: canh cải xanh
-- Món xào/luộc: khổ qua xào trứng
+- Món canh: canh khoai mỡ
+- Món xào/luộc: măng vàng xào
 
 ### Thứ 4 - 10/06/2026
 
 - Ngày âm: 25/4 âm lịch
-- Bữa sáng: tàu hủ
+- Bữa sáng: hoành thánh
 - Món mặn chính: cơm gà luộc nước mắm
-- Món canh: canh rau tần ô
-- Món xào/luộc: măng vàng xào
+- Món canh: canh bí đỏ
+- Món xào/luộc: cà rốt xào
 
 ### Thứ 5 - 11/06/2026
 
 - Ngày âm: 26/4 âm lịch
-- Bữa sáng: mì nước tương
+- Bữa sáng: tàu hủ
 - Món mặn chính: mì heo xào
 
 ### Thứ 6 - 12/06/2026
 
 - Ngày âm: 27/4 âm lịch
-- Bữa sáng: bắp luộc
+- Bữa sáng: mì nước tương
 - Món mặn chính: cơm cá chiên
-- Món canh: canh xà lách xoong
-- Món xào/luộc: cà rốt xào
+- Món canh: canh bí đao
+- Món xào/luộc: đậu que luộc

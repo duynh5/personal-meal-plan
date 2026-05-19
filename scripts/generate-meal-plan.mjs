@@ -16,6 +16,7 @@ import {
 import { readMenu } from "./meal-plan/menu.mjs";
 import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
 import { createWeekDishesFromWeek, isReusableWeek, reusableWeeksByStartDate } from "./meal-plan/reusable-weeks.mjs";
+import { addWeekToRolling, weekRepeatsRollingItems } from "./meal-plan/rolling-dishes.mjs";
 import { fullWeekGroupPatterns, fullWeekStarchPatterns, groupPatternFor, rotatedStarchPatterns } from "./meal-plan/week-patterns.mjs";
 import { readPlanConfig } from "./plan-config.mjs";
 import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
@@ -162,7 +163,7 @@ function findDish(group, starch, seed, usedNames, previousWeekMains, rollingMain
   return dish;
 }
 
-function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes, rollingMains) {
+function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes, rollingDishes) {
   const groupPattern = groupPatternFor(weekIndex);
   const usedMains = new Set();
   let previousWeekMainRepeats = 0;
@@ -175,13 +176,13 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
     const group = vegetarianDay ? "vegetarian" : groupPattern[dayIndex];
     const starch = starchPattern[dayIndex];
     const dish = vegetarianDay
-      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingMains)
-      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingMains);
+      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains)
+      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingDishes.mains);
 
     if (previousWeekDishes.mains.has(dish.name)) {
       previousWeekMainRepeats += 1;
     }
-    if (rollingMains.has(dish.name)) {
+    if (rollingDishes.mains.has(dish.name)) {
       rollingMainRepeats += 1;
     }
     if (dish.starch !== starch) {
@@ -193,7 +194,7 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
   return rollingMainRepeats * 200 + previousWeekMainRepeats * 100 + fallbackStarchChoices;
 }
 
-function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishes, rollingMains) {
+function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishes, rollingDishes) {
   const seed = dates[0].getUTCFullYear() * 10000 + (dates[0].getUTCMonth() + 1) * 100 + dates[0].getUTCDate() + seedOffset;
   let bestPattern = null;
   let bestScore = Number.POSITIVE_INFINITY;
@@ -205,7 +206,7 @@ function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishe
       seedOffset,
       starchPattern,
       previousWeekDishes,
-      rollingMains
+      rollingDishes
     );
 
     if (score < bestScore) {
@@ -234,25 +235,27 @@ function chooseVegetarianDish(starch, seed, previousWeekMains, rollingMains) {
   );
 }
 
-function chooseSide(list, seed, weekItems, previousWeekItems, previousSide) {
+function chooseSide(list, seed, weekItems, previousWeekItems, rollingItems, previousSide) {
   return chooseScoredOption(
     list,
     seed,
     () => true,
     (item) =>
       (weekItems.has(item) ? 1000 : 0) +
+      (rollingItems.has(item) ? 700 : 0) +
       (previousWeekItems.has(item) ? 500 : 0) +
       (item === previousSide ? 100 : 0)
   );
 }
 
-function chooseSoup(seed, weekSoups, previousWeekSoups, previousSoup) {
+function chooseSoup(seed, weekSoups, previousWeekSoups, rollingSoups, previousSoup) {
   const soup = chooseScoredOption(
     menu.soups,
     seed,
     () => true,
     (item) =>
       (weekSoups.has(item.name) ? 1000 : 0) +
+      (rollingSoups.has(item.name) ? 700 : 0) +
       (previousWeekSoups.has(item.name) ? 500 : 0) +
       (item.name === previousSoup ? 100 : 0) +
       (item.profile === "protein" ? 10 : 0)
@@ -261,13 +264,14 @@ function chooseSoup(seed, weekSoups, previousWeekSoups, previousSoup) {
   return soup?.name ?? null;
 }
 
-function chooseBreakfast(seed, weekDishes, previousWeekBreakfasts, previousBreakfastCategory) {
+function chooseBreakfast(seed, weekDishes, previousWeekDishes, rollingDishes, previousBreakfastCategory) {
   const breakfast = chooseScoredOption(
     menu.breakfasts,
     seed,
     (item) => !weekDishes.breakfasts.has(item.name),
     (item) =>
-      (previousWeekBreakfasts.has(item.name) ? 1000 : 0) +
+      (rollingDishes.breakfasts.has(item.name) ? 1200 : 0) +
+      (previousWeekDishes.breakfasts.has(item.name) ? 1000 : 0) +
       (weekDishes.breakfastCategoryCounts.get(item.category) ?? 0) * 50 +
       (item.category === previousBreakfastCategory ? 10 : 0)
   );
@@ -283,20 +287,21 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
   return chooseRotatedOption(options, seed, isAllowed, isPreferred);
 }
 
-function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, rollingMains, group, starch) {
+function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, rollingDishes, group, starch) {
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
   const previousBreakfastName = weekDishes.lastBreakfast ?? previousWeekDishes.lastBreakfast;
   const previousBreakfastCategory = menu.breakfastByName.get(previousBreakfastName)?.category;
   const breakfast = chooseBreakfast(
     seed + weekIndex * 11,
     weekDishes,
-    previousWeekDishes.breakfasts,
+    previousWeekDishes,
+    rollingDishes,
     previousBreakfastCategory
   );
   const vegetarianDay = isVegetarianLunarDay(date);
   const dish = vegetarianDay
-    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingMains)
-    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingMains);
+    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains)
+    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains);
 
   weekDishes.breakfasts.add(breakfast);
   weekDishes.lastBreakfast = breakfast;
@@ -310,9 +315,11 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   const hasRiceSides = !vegetarianDay && dish.starch === "rice";
   const previousSoup = weekDishes.lastSoup ?? previousWeekDishes.lastSoup;
   const previousSide = weekDishes.lastSide ?? previousWeekDishes.lastSide;
-  const soup = hasRiceSides ? chooseSoup(seed + 3, weekDishes.soups, previousWeekDishes.soups, previousSoup) : null;
+  const soup = hasRiceSides
+    ? chooseSoup(seed + 3, weekDishes.soups, previousWeekDishes.soups, rollingDishes.soups, previousSoup)
+    : null;
   const side = hasRiceSides
-    ? chooseSide(menu.sides, seed + 7, weekDishes.sides, previousWeekDishes.sides, previousSide)
+    ? chooseSide(menu.sides, seed + 7, weekDishes.sides, previousWeekDishes.sides, rollingDishes.sides, previousSide)
     : null;
 
   if (soup) {
@@ -340,7 +347,7 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   };
 }
 
-function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishes, rollingMains) {
+function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishes, rollingDishes) {
   const weekDishes = createWeekDishes();
   const groupPattern = groupPatternFor(weekIndex);
   const starchPattern = chooseWeekStarchPattern(
@@ -348,7 +355,7 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
     weekIndex,
     seedOffset,
     previousWeekDishes,
-    rollingMains
+    rollingDishes
   );
   const days = weekDates.map((date, dayIndex) =>
     buildDay(
@@ -357,7 +364,7 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
       seedOffset,
       weekDishes,
       previousWeekDishes,
-      rollingMains,
+      rollingDishes,
       groupPattern[dayIndex],
       starchPattern[dayIndex]
     )
@@ -390,16 +397,6 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
   };
 }
 
-function weekRepeatsRollingMain(week, rollingMains) {
-  return week.days.some((day) => rollingMains.has(day.main));
-}
-
-function addWeekMainsToRolling(rollingMains, week) {
-  for (const day of week.days) {
-    rollingMains.add(day.main);
-  }
-}
-
 function buildPlanFromDays(
   days,
   metadata,
@@ -411,7 +408,7 @@ function buildPlanFromDays(
   const weeksByStartDate = reusableWeeksByStartDate(previousPlan);
   let previousWeekDishes = initialPreviousWeekDishes;
   let reuseStillContiguous = true;
-  const rollingMains = new Set();
+  const rollingDishes = createWeekDishes();
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
     const reusableWeek = weeksByStartDate.get(week.key);
@@ -421,11 +418,11 @@ function buildPlanFromDays(
       isVegetarianLunarDay,
       menu,
       weekdayNames
-    }) && !weekRepeatsRollingMain(reusableWeek, rollingMains)) {
+    }) && !weekRepeatsRollingItems(reusableWeek, rollingDishes)) {
       const reusedWeek = structuredClone(reusableWeek);
       weeks.push(reusedWeek);
       previousWeekDishes = createWeekDishesFromWeek(reusedWeek);
-      addWeekMainsToRolling(rollingMains, reusedWeek);
+      addWeekToRolling(rollingDishes, reusedWeek);
       continue;
     }
 
@@ -435,11 +432,11 @@ function buildPlanFromDays(
       weekIndex,
       seedOffset,
       previousWeekDishes,
-      rollingMains
+      rollingDishes
     );
     weeks.push(generatedWeek.week);
     previousWeekDishes = generatedWeek.weekDishes;
-    addWeekMainsToRolling(rollingMains, generatedWeek.week);
+    addWeekToRolling(rollingDishes, generatedWeek.week);
   }
 
   return {

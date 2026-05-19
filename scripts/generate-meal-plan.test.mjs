@@ -21,6 +21,20 @@ function weekDishes(week) {
   };
 }
 
+function assertNoAvoidableRepeats(days, field, options) {
+  const seen = new Set();
+
+  for (const day of days) {
+    const value = day[field];
+    if (!value) {
+      continue;
+    }
+
+    assert.ok(!seen.has(value) || seen.size >= options.length, `${field} repeats ${value} before options are exhausted`);
+    seen.add(value);
+  }
+}
+
 describe("buildRollingPlan", () => {
   it("prefers non-previous-week options that still satisfy category rules", () => {
     const options = ["last-week", "blocked", "fresh"];
@@ -101,6 +115,16 @@ describe("buildRollingPlan", () => {
       .map((day) => day.main);
 
     assert.equal(new Set(mains).size, mains.length);
+    assert.doesNotThrow(() => validatePlan(plan));
+  });
+
+  it("does not repeat breakfasts, soups, or sides across the rolling plan until options are exhausted", () => {
+    const plan = buildRollingPlan(new Date("2026-05-19T01:00:00.000Z"), { planVariant: "nguyenfamily" });
+    const days = plan.weeks.flatMap((week) => week.days);
+
+    assertNoAvoidableRepeats(days, "breakfast", menu.breakfastNames);
+    assertNoAvoidableRepeats(days, "soup", menu.soupNames);
+    assertNoAvoidableRepeats(days, "side", menu.sideNames);
     assert.doesNotThrow(() => validatePlan(plan));
   });
 

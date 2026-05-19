@@ -35,8 +35,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 - Ngày chay là mùng 1 và ngày 15 âm lịch Việt Nam, được xác định tự động bằng `scripts/lunar.mjs`.
 - Khi có ngày chay trong tuần, ngày đó thay thế một ngày mặn; các ngày còn lại vẫn cân bằng nhóm món nhiều nhất có thể.
 - Ngày thường có thể ăn món chay hoặc món mặn.
-- Bữa sáng, món canh, và món xào/luộc không nên lặp lại từ tuần liền trước nếu còn lựa chọn khác phù hợp.
-- Món chính không nên lặp lại trong toàn bộ kế hoạch 4 tuần nếu còn lựa chọn khác phù hợp trong cùng nhóm món.
+- Bữa sáng, món chính, món canh, và món xào/luộc không nên lặp lại trong toàn bộ kế hoạch 4 tuần nếu còn lựa chọn khác phù hợp.
 - Khi chọn canh cho bữa cơm, ưu tiên canh có `profile` là `light`; canh `protein` vẫn là lựa chọn dự phòng hợp lệ.
 - Món cá có thể trùng trong tuần.
 - Món thịt và món gà/trứng không được trùng trong cùng tuần.

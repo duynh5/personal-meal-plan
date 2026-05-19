@@ -252,6 +252,13 @@ describe("validatePlan", () => {
     assertValidationError(plan, /main repeats ".+" in the rolling plan/);
   });
 
+  it("rejects avoidable breakfast repeats across the rolling plan", () => {
+    const plan = clonePlan();
+    plan.weeks[2].days[0].breakfast = plan.weeks[0].days[0].breakfast;
+
+    assertValidationError(plan, /breakfast repeats ".+" in the rolling plan/);
+  });
+
   it("rejects side dishes that are not in the menu source data", () => {
     const plan = clonePlan();
     plan.weeks[0].days[0].side = "rau không có trong menu";
@@ -285,12 +292,30 @@ describe("validatePlan", () => {
     assertValidationError(plan, /soup repeats ".+" in the same week/);
   });
 
+  it("rejects avoidable soup repeats across the rolling plan", () => {
+    const plan = clonePlan();
+    const sourceDay = firstRiceDay(plan.weeks[0]);
+    const targetDay = firstRiceDay(plan.weeks[2]);
+    targetDay.soup = sourceDay.soup;
+
+    assertValidationError(plan, /soup repeats ".+" in the rolling plan/);
+  });
+
   it("rejects avoidable side repeats in the same week", () => {
     const plan = clonePlan();
     const [sourceDay, targetDay] = firstTwoRiceDays(plan.weeks[0]);
     targetDay.side = sourceDay.side;
 
     assertValidationError(plan, /side repeats ".+" in the same week/);
+  });
+
+  it("rejects avoidable side repeats across the rolling plan", () => {
+    const plan = clonePlan();
+    const sourceDay = firstRiceDay(plan.weeks[0]);
+    const targetDay = firstRiceDay(plan.weeks[2]);
+    targetDay.side = sourceDay.side;
+
+    assertValidationError(plan, /side repeats ".+" in the rolling plan/);
   });
 
   it("keeps non-vegetarian weekly group caps when a vegetarian meal is present", () => {

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import { addDays, listWeekdaysInRange, toDisplayDate, toIsoDate } from "./meal-plan/dates.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
@@ -43,17 +44,6 @@ const fullWeekGroupCounts = new Map([
 ]);
 const fullWeekStapleCount = 3;
 const fullWeekNoodleCount = 2;
-
-function toIsoDate(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function toDisplayDate(date) {
-  return `${String(date.getUTCDate()).padStart(2, "0")}/${String(date.getUTCMonth() + 1).padStart(
-    2,
-    "0"
-  )}/${date.getUTCFullYear()}`;
-}
 
 function countBy(items, field) {
   const counts = new Map();
@@ -169,26 +159,6 @@ function isValidDateTime(value) {
   );
 }
 
-function addDays(date, days) {
-  const next = new Date(date);
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
-}
-
-function listWeekdaysInRange(startDate, endDate) {
-  const dates = [];
-
-  for (let date = startDate; date <= endDate; date.setUTCDate(date.getUTCDate() + 1)) {
-    const weekday = date.getUTCDay();
-
-    if (weekday >= 1 && weekday <= 5) {
-      dates.push(toIsoDate(date));
-    }
-  }
-
-  return dates;
-}
-
 export function validatePlan(plan) {
   const errors = [];
   const seenDates = new Set();
@@ -196,7 +166,7 @@ export function validatePlan(plan) {
   let previousPlanDate = null;
   let rangeStart = null;
   let rangeEnd = null;
-  const rollingMains = new Set();
+  const rollingDishes = createWeekDishes();
 
   if (!plan || typeof plan !== "object") {
     throw new Error("meal-plan.json must contain an object.");
@@ -355,8 +325,12 @@ export function validatePlan(plan) {
         ) {
           errors.push(`${dayLabel}.breakfast repeats "${day.breakfast}" from the previous week.`);
         }
+        if (rollingDishes.breakfasts.has(day.breakfast) && hasNonPreviousBreakfast(rollingDishes, weeklyBreakfasts)) {
+          errors.push(`${dayLabel}.breakfast repeats "${day.breakfast}" in the rolling plan.`);
+        }
         weeklyBreakfasts.add(day.breakfast);
         weekDishes.breakfasts.add(day.breakfast);
+        rollingDishes.breakfasts.add(day.breakfast);
       }
       if (!isNonEmptyString(day.main)) {
         errors.push(`${dayLabel}.main must be a non-empty string.`);
@@ -372,7 +346,7 @@ export function validatePlan(plan) {
         if (weekDishes.mains.has(day.main) && hasNonWeeklyMain(day, weekDishes.mains)) {
           errors.push(`${dayLabel}.main repeats "${day.main}" in the same week.`);
         }
-        if (rollingMains.has(day.main) && hasNonRollingMain(day, rollingMains)) {
+        if (rollingDishes.mains.has(day.main) && hasNonRollingMain(day, rollingDishes.mains)) {
           errors.push(`${dayLabel}.main repeats "${day.main}" in the rolling plan.`);
         }
         if (
@@ -382,7 +356,7 @@ export function validatePlan(plan) {
           errors.push(`${dayLabel}.main repeats "${day.main}" from the previous week.`);
         }
         weekDishes.mains.add(day.main);
-        rollingMains.add(day.main);
+        rollingDishes.mains.add(day.main);
       }
       if (day.vegetarianDay) {
         if (day.group !== "vegetarian" || day.groupLabel !== "Chay") {
@@ -429,6 +403,13 @@ export function validatePlan(plan) {
         errors.push(`${dayLabel}.soup repeats "${day.soup}" from the previous week.`);
       }
       if (
+        isNonEmptyString(day.soup) &&
+        rollingDishes.soups.has(day.soup) &&
+        hasNonPreviousItem(menuSoups, rollingDishes.soups)
+      ) {
+        errors.push(`${dayLabel}.soup repeats "${day.soup}" in the rolling plan.`);
+      }
+      if (
         isNonEmptyString(day.side) &&
         weekDishes.sides.has(day.side) &&
         hasNonPreviousItem(menuSides, weekDishes.sides)
@@ -442,11 +423,20 @@ export function validatePlan(plan) {
       ) {
         errors.push(`${dayLabel}.side repeats "${day.side}" from the previous week.`);
       }
+      if (
+        isNonEmptyString(day.side) &&
+        rollingDishes.sides.has(day.side) &&
+        hasNonPreviousItem(menuSides, rollingDishes.sides)
+      ) {
+        errors.push(`${dayLabel}.side repeats "${day.side}" in the rolling plan.`);
+      }
       if (isNonEmptyString(day.soup)) {
         weekDishes.soups.add(day.soup);
+        rollingDishes.soups.add(day.soup);
       }
       if (isNonEmptyString(day.side)) {
         weekDishes.sides.add(day.side);
+        rollingDishes.sides.add(day.side);
       }
       if ((day.starch !== "rice" || day.vegetarianDay) && (day.soup || day.side)) {
         errors.push(`${dayLabel} non-rice or vegetarian meal must not include soup or side.`);
@@ -471,7 +461,7 @@ export function validatePlan(plan) {
   }
 
   if (rangeStart && rangeEnd) {
-    const expectedDates = listWeekdaysInRange(new Date(rangeStart), new Date(rangeEnd));
+    const expectedDates = listWeekdaysInRange(new Date(rangeStart), new Date(rangeEnd)).map(toIsoDate);
     if (expectedDates.length !== rollingWeekCount * weekdaysPerWeek) {
       errors.push(`metadata date range must contain exactly ${rollingWeekCount * weekdaysPerWeek} weekdays.`);
     }
