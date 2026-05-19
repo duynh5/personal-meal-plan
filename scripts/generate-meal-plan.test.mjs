@@ -198,6 +198,12 @@ describe("buildRollingPlan", () => {
     assert.equal(plan.metadata.startDate, "2026-05-18");
   });
 
+  it("includes the current week for Monday-through-Thursday manual runs", () => {
+    const plan = buildRollingPlan(new Date("2026-05-19T01:00:00.000Z"));
+
+    assert.equal(plan.metadata.startDate, "2026-05-18");
+  });
+
   it("rejects invalid run dates", () => {
     assert.throws(() => buildRollingPlan(new Date("not-a-date")), /runDate must be a valid Date/);
   });

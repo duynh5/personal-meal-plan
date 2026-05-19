@@ -87,6 +87,23 @@ function nextMondayOnOrAfter(date) {
   return addDays(date, daysUntilMonday);
 }
 
+function mondayOfWeek(date) {
+  const weekday = date.getUTCDay();
+  const daysSinceMonday = weekday === 0 ? 6 : weekday - 1;
+
+  return addDays(date, -daysSinceMonday);
+}
+
+function planStartMonday(date) {
+  const weekday = date.getUTCDay();
+
+  if (weekday >= 1 && weekday <= 4) {
+    return mondayOfWeek(date);
+  }
+
+  return nextMondayOnOrAfter(date);
+}
+
 function listWeekdaysInRange(startDate, endDate) {
   const days = [];
 
@@ -541,7 +558,7 @@ function buildPlanFromDays(
 export function buildRollingPlan(runDate = new Date(), options = {}) {
   assertValidDate(runDate, "runDate");
 
-  const startDate = nextMondayOnOrAfter(currentVietnamDate(runDate));
+  const startDate = planStartMonday(currentVietnamDate(runDate));
   const endDate = addDays(startDate, rollingWeekCount * 7 - 1);
   const days = listWeekdaysInRange(startDate, endDate);
   const previousWeekDates = new Set(
