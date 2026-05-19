@@ -265,6 +265,14 @@ describe("validatePlan", () => {
     assertValidationError(plan, /side repeats ".+" from the previous week/);
   });
 
+  it("rejects avoidable soup repeats in the same week", () => {
+    const plan = clonePlan();
+    const [sourceDay, targetDay] = firstTwoRiceDays(plan.weeks[0]);
+    targetDay.soup = sourceDay.soup;
+
+    assertValidationError(plan, /soup repeats ".+" in the same week/);
+  });
+
   it("rejects avoidable side repeats in the same week", () => {
     const plan = clonePlan();
     const [sourceDay, targetDay] = firstTwoRiceDays(plan.weeks[0]);

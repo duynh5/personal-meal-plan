@@ -2,8 +2,20 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
+import {
+  addDays,
+  assertValidDate,
+  currentVietnamDate,
+  groupByWeek,
+  listWeekdaysInRange,
+  planStartMonday,
+  timeZone,
+  toDisplayDate,
+  toIsoDate
+} from "./meal-plan/dates.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
 import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
+import { createWeekDishesFromWeek, isReusableWeek, reusableWeeksByStartDate } from "./meal-plan/reusable-weeks.mjs";
 import { fullWeekGroupPatterns, fullWeekStarchPatterns, groupPatternFor, rotatedStarchPatterns } from "./meal-plan/week-patterns.mjs";
 import { readPlanConfig } from "./plan-config.mjs";
 import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
@@ -15,7 +27,7 @@ const planConfigPath = path.join(rootDir, "data", "plan-config.json");
 const menuPath = path.join(rootDir, "data", "menu.json");
 const outputJsonPath = path.join(rootDir, "meal-plan.json");
 const outputMdPath = path.join(rootDir, "meal-plan.md");
-const timeZone = "Asia/Ho_Chi_Minh", vietnamUtcOffset = 7, rollingWeekCount = 4;
+const vietnamUtcOffset = 7, rollingWeekCount = 4;
 const planConfig = readPlanConfig(planConfigPath);
 const defaultPlanVariant = process.env.MEAL_PLAN_VARIANT ?? planConfig.mealPlanVariant;
 
@@ -34,115 +46,6 @@ const menu = readMenu(menuPath, {
   requiredGroups: new Set(fullWeekGroupPatterns.flat()),
   requiredStarches: new Set(fullWeekStarchPatterns.flat())
 });
-
-function pad(number) {
-  return String(number).padStart(2, "0");
-}
-
-function toIsoDate(date) {
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`;
-}
-
-function toDisplayDate(date) {
-  return `${pad(date.getUTCDate())}/${pad(date.getUTCMonth() + 1)}/${date.getUTCFullYear()}`;
-}
-
-function makeUtcDate(year, month, day) {
-  return new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
-}
-
-function addDays(date, days) {
-  const next = new Date(date);
-  next.setUTCDate(next.getUTCDate() + days);
-  return next;
-}
-
-function getVietnamDateParts(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit"
-  }).formatToParts(date);
-
-  return Object.fromEntries(parts.map((part) => [part.type, part.value]));
-}
-
-function currentVietnamDate(date = new Date()) {
-  const parts = getVietnamDateParts(date);
-
-  return makeUtcDate(Number(parts.year), Number(parts.month), Number(parts.day));
-}
-
-function assertValidDate(value, label) {
-  if (!(value instanceof Date) || Number.isNaN(value.getTime())) {
-    throw new Error(`${label} must be a valid Date.`);
-  }
-}
-
-function nextMondayOnOrAfter(date) {
-  const weekday = date.getUTCDay();
-  const daysUntilMonday = weekday === 1 ? 0 : (8 - weekday) % 7;
-
-  return addDays(date, daysUntilMonday);
-}
-
-function mondayOfWeek(date) {
-  const weekday = date.getUTCDay();
-  const daysSinceMonday = weekday === 0 ? 6 : weekday - 1;
-
-  return addDays(date, -daysSinceMonday);
-}
-
-function planStartMonday(date) {
-  const weekday = date.getUTCDay();
-
-  if (weekday >= 1 && weekday <= 4) {
-    return mondayOfWeek(date);
-  }
-
-  return nextMondayOnOrAfter(date);
-}
-
-function listWeekdaysInRange(startDate, endDate) {
-  const days = [];
-
-  for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
-    const weekday = date.getUTCDay();
-
-    if (weekday >= 1 && weekday <= 5) {
-      days.push(date);
-    }
-  }
-
-  return days;
-}
-
-function weekKeyFor(date) {
-  const monday = addDays(date, -(date.getUTCDay() - 1));
-  return toIsoDate(monday);
-}
-
-function groupByWeek(days) {
-  const weeks = [];
-  const byKey = new Map();
-
-  for (const date of days) {
-    const key = weekKeyFor(date);
-    if (!byKey.has(key)) {
-      const week = { key, days: [] };
-      byKey.set(key, week);
-      weeks.push(week);
-    }
-    byKey.get(key).days.push(date);
-  }
-
-  return weeks;
-}
-
-function isNonEmptyString(value) {
-  return typeof value === "string" && value.trim().length > 0;
-}
 
 function rotateIndex(seed, length) {
   return Math.abs(seed) % length;
@@ -464,63 +367,6 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
   };
 }
 
-function createWeekDishesFromWeek(week) {
-  const dishes = createWeekDishes();
-  const days = Array.isArray(week?.days) ? [...week.days] : [];
-  days.sort((left, right) => left.date.localeCompare(right.date));
-
-  for (const day of days) {
-    if (isNonEmptyString(day?.breakfast)) {
-      dishes.breakfasts.add(day.breakfast);
-      dishes.lastBreakfast = day.breakfast;
-    }
-    if (isNonEmptyString(day?.main)) {
-      dishes.mains.add(day.main);
-    }
-    if (isNonEmptyString(day?.soup)) {
-      dishes.soups.add(day.soup);
-      dishes.lastSoup = day.soup;
-    }
-    if (isNonEmptyString(day?.side)) {
-      dishes.sides.add(day.side);
-      dishes.lastSide = day.side;
-    }
-  }
-
-  return dishes;
-}
-
-function reusableWeeksByStartDate(previousPlan) {
-  if (!previousPlan || !Array.isArray(previousPlan.weeks)) {
-    return new Map();
-  }
-
-  const byStartDate = new Map();
-
-  for (const week of previousPlan.weeks) {
-    if (!Array.isArray(week?.days) || week.days.length === 0) {
-      continue;
-    }
-
-    const firstDay = week.days[0];
-    if (!isNonEmptyString(firstDay?.date)) {
-      continue;
-    }
-
-    byStartDate.set(firstDay.date, week);
-  }
-
-  return byStartDate;
-}
-
-function weekMatchesDates(week, expectedDates) {
-  if (!Array.isArray(week?.days) || week.days.length !== expectedDates.length) {
-    return false;
-  }
-
-  return week.days.every((day, index) => day?.date === expectedDates[index]);
-}
-
 function buildPlanFromDays(
   days,
   metadata,
@@ -531,19 +377,24 @@ function buildPlanFromDays(
   const weeks = [];
   const weeksByStartDate = reusableWeeksByStartDate(previousPlan);
   let previousWeekDishes = initialPreviousWeekDishes;
-  let canReuseWeek = true;
+  let reuseStillContiguous = true;
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
-    const expectedDates = week.days.map(toIsoDate);
     const reusableWeek = weeksByStartDate.get(week.key);
 
-    if (canReuseWeek && reusableWeek && weekMatchesDates(reusableWeek, expectedDates)) {
-      weeks.push(reusableWeek);
-      previousWeekDishes = createWeekDishesFromWeek(reusableWeek);
+    if (reuseStillContiguous && reusableWeek && isReusableWeek(reusableWeek, week.days, {
+      groupLabels,
+      isVegetarianLunarDay,
+      menu,
+      weekdayNames
+    })) {
+      const reusedWeek = structuredClone(reusableWeek);
+      weeks.push(reusedWeek);
+      previousWeekDishes = createWeekDishesFromWeek(reusedWeek);
       continue;
     }
 
-    canReuseWeek = false;
+    reuseStillContiguous = false;
     const generatedWeek = createGeneratedWeek(week.days, weekIndex, seedOffset, previousWeekDishes);
     weeks.push(generatedWeek.week);
     previousWeekDishes = generatedWeek.weekDishes;

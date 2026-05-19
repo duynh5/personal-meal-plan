@@ -215,6 +215,7 @@ describe("buildRollingPlan", () => {
     assert.equal(firstRun.metadata.startDate, "2026-05-25");
     assert.equal(secondRun.metadata.startDate, "2026-06-01");
     assert.deepEqual(secondRun.weeks.slice(0, 3), firstRun.weeks.slice(1, 4));
+    assert.notStrictEqual(secondRun.weeks[0], firstRun.weeks[1]);
     assert.doesNotThrow(() => validatePlan(secondRun));
   });
 
@@ -225,6 +226,26 @@ describe("buildRollingPlan", () => {
     const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: mismatchedPreviousPlan });
 
     assert.notDeepEqual(secondRun.weeks[0], firstRun.weeks[1]);
+    assert.doesNotThrow(() => validatePlan(secondRun));
+  });
+
+  it("does not reuse stale overlapping weeks with invalid meal content", () => {
+    const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
+    const stalePreviousPlan = structuredClone(firstRun);
+    stalePreviousPlan.weeks[1].days[0].breakfast = "bữa sáng không có trong menu";
+    const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: stalePreviousPlan });
+
+    assert.notDeepEqual(secondRun.weeks[0], stalePreviousPlan.weeks[1]);
+    assert.doesNotThrow(() => validatePlan(secondRun));
+  });
+
+  it("does not reuse stale overlapping weeks with avoidable duplicate meals", () => {
+    const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
+    const stalePreviousPlan = structuredClone(firstRun);
+    stalePreviousPlan.weeks[1].days[1].breakfast = stalePreviousPlan.weeks[1].days[0].breakfast;
+    const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: stalePreviousPlan });
+
+    assert.notDeepEqual(secondRun.weeks[0], stalePreviousPlan.weeks[1]);
     assert.doesNotThrow(() => validatePlan(secondRun));
   });
 });

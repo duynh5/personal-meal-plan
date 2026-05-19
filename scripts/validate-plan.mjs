@@ -408,6 +408,13 @@ export function validatePlan(plan) {
       }
       if (
         isNonEmptyString(day.soup) &&
+        weekDishes.soups.has(day.soup) &&
+        hasNonPreviousItem(menuSoups, weekDishes.soups)
+      ) {
+        errors.push(`${dayLabel}.soup repeats "${day.soup}" in the same week.`);
+      }
+      if (
+        isNonEmptyString(day.soup) &&
         previousWeekDishes.soups.has(day.soup) &&
         hasNonPreviousItem(menuSoups, previousWeekDishes.soups)
       ) {
