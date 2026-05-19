@@ -240,6 +240,18 @@ describe("validatePlan", () => {
     assertValidationError(plan, /repeats ".+" in the same week/);
   });
 
+  it("rejects avoidable main repeats across the rolling plan", () => {
+    const plan = clonePlan();
+    Object.assign(plan.weeks[2].days[2], {
+      main: plan.weeks[0].days[2].main,
+      group: plan.weeks[0].days[2].group,
+      groupLabel: plan.weeks[0].days[2].groupLabel,
+      starch: plan.weeks[0].days[2].starch
+    });
+
+    assertValidationError(plan, /main repeats ".+" in the rolling plan/);
+  });
+
   it("rejects side dishes that are not in the menu source data", () => {
     const plan = clonePlan();
     plan.weeks[0].days[0].side = "rau không có trong menu";

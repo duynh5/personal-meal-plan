@@ -88,37 +88,37 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 
 - Ngày âm: 16/4 âm lịch
 - Bữa sáng: bánh mì phomai chuối
-- Món mặn chính: bánh canh cá
+- Món mặn chính: cơm cá cơm kho + trứng chiên thịt bằm
+- Món canh: canh bầu
+- Món xào/luộc: đậu que xào
 
 ### Thứ 3 - 02/06/2026
 
 - Ngày âm: 17/4 âm lịch
 - Bữa sáng: há cảo tôm
-- Món mặn chính: cơm heo kho tàu
-- Món canh: canh khoai sọ
-- Món xào/luộc: đậu que luộc
+- Món mặn chính: bún thịt nướng
 
 ### Thứ 4 - 03/06/2026
 
 - Ngày âm: 18/4 âm lịch
 - Bữa sáng: xôi bắp
-- Món mặn chính: cơm gà nướng muối
-- Món canh: canh cải bó xôi
+- Món mặn chính: cơm gà kho gừng
+- Món canh: canh khoai sọ
 - Món xào/luộc: bông bí xào
 
 ### Thứ 5 - 04/06/2026
 
 - Ngày âm: 19/4 âm lịch
 - Bữa sáng: bánh cuốn tây hồ
-- Món mặn chính: cơm cá chưng tương + nắm mèo + bún tàu
-- Món canh: canh rau dền
-- Món xào/luộc: rau lang luộc
+- Món mặn chính: bánh canh cá
 
 ### Thứ 6 - 05/06/2026
 
 - Ngày âm: 20/4 âm lịch
 - Bữa sáng: bánh bao
-- Món mặn chính: mì heo xào
+- Món mặn chính: cơm heo cốt lết chiên
+- Món canh: canh rau dền
+- Món xào/luộc: rau lang luộc
 
 ## Tuần 08/06/2026 - 12/06/2026
 
@@ -128,9 +128,7 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 
 - Ngày âm: 23/4 âm lịch
 - Bữa sáng: bánh mì 7 hổ
-- Món mặn chính: cơm heo thịt bằm chiên
-- Món canh: canh chua
-- Món xào/luộc: măng tây xào
+- Món mặn chính: bún chả giò
 
 ### Thứ 3 - 09/06/2026
 
@@ -144,18 +142,20 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 
 - Ngày âm: 25/4 âm lịch
 - Bữa sáng: tàu hủ
-- Món mặn chính: mì gà nước
+- Món mặn chính: cơm gà luộc nước mắm
+- Món canh: canh rau tần ô
+- Món xào/luộc: măng vàng xào
 
 ### Thứ 5 - 11/06/2026
 
 - Ngày âm: 26/4 âm lịch
 - Bữa sáng: mì nước tương
-- Món mặn chính: bánh canh heo giò
+- Món mặn chính: mì heo xào
 
 ### Thứ 6 - 12/06/2026
 
 - Ngày âm: 27/4 âm lịch
 - Bữa sáng: bắp luộc
 - Món mặn chính: cơm cá chiên
-- Món canh: canh rau tần ô
+- Món canh: canh xà lách xoong
 - Món xào/luộc: cà rốt xào

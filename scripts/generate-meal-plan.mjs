@@ -112,8 +112,12 @@ function mainOptionsFor(group, starch) {
   return menu.mains.filter((dish) => dish.group === group && dish.starch === starch);
 }
 
-function mainDishScore(dish, usedNames, previousWeekMains) {
-  return (usedNames.has(dish.name) ? 1000 : 0) + (previousWeekMains.has(dish.name) ? 500 : 0);
+function mainDishScore(dish, usedNames, previousWeekMains, rollingMains) {
+  return (
+    (usedNames.has(dish.name) ? 1000 : 0) +
+    (rollingMains.has(dish.name) ? 700 : 0) +
+    (previousWeekMains.has(dish.name) ? 500 : 0)
+  );
 }
 
 function isVegetarianLunarDay(date) {
@@ -127,26 +131,27 @@ function isVegetarianLunarDay(date) {
   return lunar.day === 1 || lunar.day === 15;
 }
 
-function findDish(group, starch, seed, usedNames, previousWeekMains) {
+function findDish(group, starch, seed, usedNames, previousWeekMains, rollingMains) {
   const starchOptions = mainOptionsFor(group, starch);
   const groupOptions = menu.mains.filter((dish) => dish.group === group);
   const starchDish = chooseScoredOption(
     starchOptions,
     seed,
     () => true,
-    (option) => mainDishScore(option, usedNames, previousWeekMains)
+    (option) => mainDishScore(option, usedNames, previousWeekMains, rollingMains)
   );
   const anyStarchDish = chooseScoredOption(
     groupOptions,
     seed,
     () => true,
     (option) =>
-      mainDishScore(option, usedNames, previousWeekMains) + (option.starch === starch ? 0 : 300)
+      mainDishScore(option, usedNames, previousWeekMains, rollingMains) +
+      (option.starch === starch ? 0 : 300)
   );
   const dish = anyStarchDish
     && (!starchDish
-      || mainDishScore(anyStarchDish, usedNames, previousWeekMains)
-        < mainDishScore(starchDish, usedNames, previousWeekMains))
+      || mainDishScore(anyStarchDish, usedNames, previousWeekMains, rollingMains)
+        < mainDishScore(starchDish, usedNames, previousWeekMains, rollingMains))
     ? anyStarchDish
     : starchDish;
 
@@ -157,10 +162,11 @@ function findDish(group, starch, seed, usedNames, previousWeekMains) {
   return dish;
 }
 
-function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes) {
+function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes, rollingMains) {
   const groupPattern = groupPatternFor(weekIndex);
   const usedMains = new Set();
   let previousWeekMainRepeats = 0;
+  let rollingMainRepeats = 0;
   let fallbackStarchChoices = 0;
 
   for (const [dayIndex, date] of dates.entries()) {
@@ -169,11 +175,14 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
     const group = vegetarianDay ? "vegetarian" : groupPattern[dayIndex];
     const starch = starchPattern[dayIndex];
     const dish = vegetarianDay
-      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains)
-      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains);
+      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingMains)
+      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingMains);
 
     if (previousWeekDishes.mains.has(dish.name)) {
       previousWeekMainRepeats += 1;
+    }
+    if (rollingMains.has(dish.name)) {
+      rollingMainRepeats += 1;
     }
     if (dish.starch !== starch) {
       fallbackStarchChoices += 1;
@@ -181,16 +190,23 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
     usedMains.add(dish.name);
   }
 
-  return previousWeekMainRepeats * 100 + fallbackStarchChoices;
+  return rollingMainRepeats * 200 + previousWeekMainRepeats * 100 + fallbackStarchChoices;
 }
 
-function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishes) {
+function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishes, rollingMains) {
   const seed = dates[0].getUTCFullYear() * 10000 + (dates[0].getUTCMonth() + 1) * 100 + dates[0].getUTCDate() + seedOffset;
   let bestPattern = null;
   let bestScore = Number.POSITIVE_INFINITY;
 
   for (const starchPattern of rotatedStarchPatterns(seed + weekIndex * 17)) {
-    const score = scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes);
+    const score = scoreStarchPattern(
+      dates,
+      weekIndex,
+      seedOffset,
+      starchPattern,
+      previousWeekDishes,
+      rollingMains
+    );
 
     if (score < bestScore) {
       bestPattern = starchPattern;
@@ -204,7 +220,7 @@ function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishe
   return bestPattern;
 }
 
-function chooseVegetarianDish(starch, seed, previousWeekMains) {
+function chooseVegetarianDish(starch, seed, previousWeekMains, rollingMains) {
   const starchOptions = mainOptionsFor("vegetarian", starch);
   const dishes = starchOptions.length > 0
     ? starchOptions
@@ -214,7 +230,7 @@ function chooseVegetarianDish(starch, seed, previousWeekMains) {
     dishes,
     seed,
     () => true,
-    (dish) => !previousWeekMains.has(dish.name)
+    (dish) => !previousWeekMains.has(dish.name) && !rollingMains.has(dish.name)
   );
 }
 
@@ -267,7 +283,7 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
   return chooseRotatedOption(options, seed, isAllowed, isPreferred);
 }
 
-function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, group, starch) {
+function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, rollingMains, group, starch) {
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
   const previousBreakfastName = weekDishes.lastBreakfast ?? previousWeekDishes.lastBreakfast;
   const previousBreakfastCategory = menu.breakfastByName.get(previousBreakfastName)?.category;
@@ -279,8 +295,8 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, g
   );
   const vegetarianDay = isVegetarianLunarDay(date);
   const dish = vegetarianDay
-    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains)
-    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains);
+    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingMains)
+    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingMains);
 
   weekDishes.breakfasts.add(breakfast);
   weekDishes.lastBreakfast = breakfast;
@@ -324,10 +340,16 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, g
   };
 }
 
-function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishes) {
+function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishes, rollingMains) {
   const weekDishes = createWeekDishes();
   const groupPattern = groupPatternFor(weekIndex);
-  const starchPattern = chooseWeekStarchPattern(weekDates, weekIndex, seedOffset, previousWeekDishes);
+  const starchPattern = chooseWeekStarchPattern(
+    weekDates,
+    weekIndex,
+    seedOffset,
+    previousWeekDishes,
+    rollingMains
+  );
   const days = weekDates.map((date, dayIndex) =>
     buildDay(
       date,
@@ -335,6 +357,7 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
       seedOffset,
       weekDishes,
       previousWeekDishes,
+      rollingMains,
       groupPattern[dayIndex],
       starchPattern[dayIndex]
     )
@@ -367,6 +390,16 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
   };
 }
 
+function weekRepeatsRollingMain(week, rollingMains) {
+  return week.days.some((day) => rollingMains.has(day.main));
+}
+
+function addWeekMainsToRolling(rollingMains, week) {
+  for (const day of week.days) {
+    rollingMains.add(day.main);
+  }
+}
+
 function buildPlanFromDays(
   days,
   metadata,
@@ -378,6 +411,7 @@ function buildPlanFromDays(
   const weeksByStartDate = reusableWeeksByStartDate(previousPlan);
   let previousWeekDishes = initialPreviousWeekDishes;
   let reuseStillContiguous = true;
+  const rollingMains = new Set();
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
     const reusableWeek = weeksByStartDate.get(week.key);
@@ -387,17 +421,25 @@ function buildPlanFromDays(
       isVegetarianLunarDay,
       menu,
       weekdayNames
-    })) {
+    }) && !weekRepeatsRollingMain(reusableWeek, rollingMains)) {
       const reusedWeek = structuredClone(reusableWeek);
       weeks.push(reusedWeek);
       previousWeekDishes = createWeekDishesFromWeek(reusedWeek);
+      addWeekMainsToRolling(rollingMains, reusedWeek);
       continue;
     }
 
     reuseStillContiguous = false;
-    const generatedWeek = createGeneratedWeek(week.days, weekIndex, seedOffset, previousWeekDishes);
+    const generatedWeek = createGeneratedWeek(
+      week.days,
+      weekIndex,
+      seedOffset,
+      previousWeekDishes,
+      rollingMains
+    );
     weeks.push(generatedWeek.week);
     previousWeekDishes = generatedWeek.weekDishes;
+    addWeekMainsToRolling(rollingMains, generatedWeek.week);
   }
 
   return {

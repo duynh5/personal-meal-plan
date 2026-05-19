@@ -4,7 +4,7 @@
     "startDate": "2026-05-18",
     "endDate": "2026-06-14",
     "timezone": "Asia/Ho_Chi_Minh",
-    "generatedAt": "2026-05-19T07:50:57.474Z",
+    "generatedAt": "2026-05-19T08:24:03.825Z",
     "planVariant": "nguyenfamily"
   },
   "weeks": [
@@ -182,12 +182,12 @@
           "weekday": "Thứ 2",
           "lunarDate": "16/4 âm lịch",
           "breakfast": "bánh mì phomai chuối",
-          "main": "bánh canh cá",
+          "main": "cơm cá cơm kho + trứng chiên thịt bằm",
           "group": "fish",
           "groupLabel": "Cá",
-          "starch": "noodle",
-          "soup": null,
-          "side": null,
+          "starch": "rice",
+          "soup": "canh bầu",
+          "side": "đậu que xào",
           "vegetarianDay": false
         },
         {
@@ -196,12 +196,12 @@
           "weekday": "Thứ 3",
           "lunarDate": "17/4 âm lịch",
           "breakfast": "há cảo tôm",
-          "main": "cơm heo kho tàu",
+          "main": "bún thịt nướng",
           "group": "beefPork",
           "groupLabel": "Bò/heo",
-          "starch": "rice",
-          "soup": "canh khoai sọ",
-          "side": "đậu que luộc",
+          "starch": "noodle",
+          "soup": null,
+          "side": null,
           "vegetarianDay": false
         },
         {
@@ -210,11 +210,11 @@
           "weekday": "Thứ 4",
           "lunarDate": "18/4 âm lịch",
           "breakfast": "xôi bắp",
-          "main": "cơm gà nướng muối",
+          "main": "cơm gà kho gừng",
           "group": "chickenEgg",
           "groupLabel": "Gà/trứng",
           "starch": "rice",
-          "soup": "canh cải bó xôi",
+          "soup": "canh khoai sọ",
           "side": "bông bí xào",
           "vegetarianDay": false
         },
@@ -224,12 +224,12 @@
           "weekday": "Thứ 5",
           "lunarDate": "19/4 âm lịch",
           "breakfast": "bánh cuốn tây hồ",
-          "main": "cơm cá chưng tương + nắm mèo + bún tàu",
+          "main": "bánh canh cá",
           "group": "fish",
           "groupLabel": "Cá",
-          "starch": "rice",
-          "soup": "canh rau dền",
-          "side": "rau lang luộc",
+          "starch": "noodle",
+          "soup": null,
+          "side": null,
           "vegetarianDay": false
         },
         {
@@ -238,12 +238,12 @@
           "weekday": "Thứ 6",
           "lunarDate": "20/4 âm lịch",
           "breakfast": "bánh bao",
-          "main": "mì heo xào",
+          "main": "cơm heo cốt lết chiên",
           "group": "beefPork",
           "groupLabel": "Bò/heo",
-          "starch": "noodle",
-          "soup": null,
-          "side": null,
+          "starch": "rice",
+          "soup": "canh rau dền",
+          "side": "rau lang luộc",
           "vegetarianDay": false
         }
       ]
@@ -262,12 +262,12 @@
           "weekday": "Thứ 2",
           "lunarDate": "23/4 âm lịch",
           "breakfast": "bánh mì 7 hổ",
-          "main": "cơm heo thịt bằm chiên",
+          "main": "bún chả giò",
           "group": "beefPork",
           "groupLabel": "Bò/heo",
-          "starch": "rice",
-          "soup": "canh chua",
-          "side": "măng tây xào",
+          "starch": "noodle",
+          "soup": null,
+          "side": null,
           "vegetarianDay": false
         },
         {
@@ -290,12 +290,12 @@
           "weekday": "Thứ 4",
           "lunarDate": "25/4 âm lịch",
           "breakfast": "tàu hủ",
-          "main": "mì gà nước",
+          "main": "cơm gà luộc nước mắm",
           "group": "chickenEgg",
           "groupLabel": "Gà/trứng",
-          "starch": "noodle",
-          "soup": null,
-          "side": null,
+          "starch": "rice",
+          "soup": "canh rau tần ô",
+          "side": "măng vàng xào",
           "vegetarianDay": false
         },
         {
@@ -304,7 +304,7 @@
           "weekday": "Thứ 5",
           "lunarDate": "26/4 âm lịch",
           "breakfast": "mì nước tương",
-          "main": "bánh canh heo giò",
+          "main": "mì heo xào",
           "group": "beefPork",
           "groupLabel": "Bò/heo",
           "starch": "noodle",
@@ -322,7 +322,7 @@
           "group": "fish",
           "groupLabel": "Cá",
           "starch": "rice",
-          "soup": "canh rau tần ô",
+          "soup": "canh xà lách xoong",
           "side": "cà rốt xào",
           "vegetarianDay": false
         }

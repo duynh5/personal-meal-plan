@@ -93,6 +93,17 @@ describe("buildRollingPlan", () => {
     }
   });
 
+  it("does not repeat chicken and egg mains across the rolling plan when alternatives exist", () => {
+    const plan = buildRollingPlan(new Date("2026-05-19T01:00:00.000Z"), { planVariant: "nguyenfamily" });
+    const mains = plan.weeks
+      .flatMap((week) => week.days)
+      .filter((day) => day.group === "chickenEgg")
+      .map((day) => day.main);
+
+    assert.equal(new Set(mains).size, mains.length);
+    assert.doesNotThrow(() => validatePlan(plan));
+  });
+
   it("spreads breakfast categories within each week when options are available", () => {
     const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"), { planVariant: "alt-1" });
 
@@ -208,13 +219,13 @@ describe("buildRollingPlan", () => {
     assert.throws(() => buildRollingPlan(new Date("not-a-date")), /runDate must be a valid Date/);
   });
 
-  it("reuses overlapping weeks from the previous plan and only generates missing future weeks", () => {
+  it("reuses compatible overlapping weeks from the previous plan", () => {
     const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
     const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: firstRun });
 
     assert.equal(firstRun.metadata.startDate, "2026-05-25");
     assert.equal(secondRun.metadata.startDate, "2026-06-01");
-    assert.deepEqual(secondRun.weeks.slice(0, 3), firstRun.weeks.slice(1, 4));
+    assert.deepEqual(secondRun.weeks.slice(0, 2), firstRun.weeks.slice(1, 3));
     assert.notStrictEqual(secondRun.weeks[0], firstRun.weeks[1]);
     assert.doesNotThrow(() => validatePlan(secondRun));
   });

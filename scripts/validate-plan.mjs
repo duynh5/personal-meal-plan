@@ -125,8 +125,11 @@ function hasNonPreviousMain(day, previousWeekDishes, weeklyRestrictedMains) {
 }
 
 function hasNonWeeklyMain(day, weeklyMains) {
-  const group = day.vegetarianDay ? "vegetarian" : day.group;
-  return mainGroupOptionsFor(group).some((dish) => !weeklyMains.has(dish.name));
+  return mainGroupOptionsFor(day.vegetarianDay ? "vegetarian" : day.group).some((dish) => !weeklyMains.has(dish.name));
+}
+
+function hasNonRollingMain(day, rollingMains) {
+  return mainGroupOptionsFor(day.vegetarianDay ? "vegetarian" : day.group).some((dish) => !rollingMains.has(dish.name));
 }
 
 function expectedVegetarianNote(days) {
@@ -193,6 +196,7 @@ export function validatePlan(plan) {
   let previousPlanDate = null;
   let rangeStart = null;
   let rangeEnd = null;
+  const rollingMains = new Set();
 
   if (!plan || typeof plan !== "object") {
     throw new Error("meal-plan.json must contain an object.");
@@ -368,6 +372,9 @@ export function validatePlan(plan) {
         if (weekDishes.mains.has(day.main) && hasNonWeeklyMain(day, weekDishes.mains)) {
           errors.push(`${dayLabel}.main repeats "${day.main}" in the same week.`);
         }
+        if (rollingMains.has(day.main) && hasNonRollingMain(day, rollingMains)) {
+          errors.push(`${dayLabel}.main repeats "${day.main}" in the rolling plan.`);
+        }
         if (
           previousWeekDishes.mains.has(day.main) &&
           hasNonPreviousMain(day, previousWeekDishes, weekDishes.mains)
@@ -375,6 +382,7 @@ export function validatePlan(plan) {
           errors.push(`${dayLabel}.main repeats "${day.main}" from the previous week.`);
         }
         weekDishes.mains.add(day.main);
+        rollingMains.add(day.main);
       }
       if (day.vegetarianDay) {
         if (day.group !== "vegetarian" || day.groupLabel !== "Chay") {
