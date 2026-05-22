@@ -49,6 +49,13 @@ const menuOptions = {
   requiredStarches: new Set(["rice", "noodle"])
 };
 
+const groupLabels = {
+  fish: "Cá",
+  beefPork: "Bò/heo",
+  chickenEgg: "Gà/trứng",
+  vegetarian: "Chay"
+};
+
 function validMenu() {
   return {
     breakfasts: [
@@ -112,9 +119,10 @@ describe("validatePlan", () => {
 
   it("rejects a group label that does not match the group key", () => {
     const plan = clonePlan();
-    plan.weeks[0].days[0].groupLabel = "Bò/heo";
+    const targetDay = plan.weeks[0].days[0];
+    targetDay.groupLabel = "Sai nhóm";
 
-    assertValidationError(plan, /groupLabel must match group "fish"/);
+    assertValidationError(plan, new RegExp(`groupLabel must match group "${targetDay.group}"`));
   });
 
   it("rejects a lunar label that does not match the date", () => {
@@ -320,22 +328,26 @@ describe("validatePlan", () => {
 
   it("keeps non-vegetarian weekly group caps when a vegetarian meal is present", () => {
     const plan = clonePlan();
-    Object.assign(plan.weeks[0].days[1], {
-      main: "mì xào chay",
+    const weekIndex = plan.weeks.findIndex((week) =>
+      week.days.filter((day) => day.group === "fish").length === 2 &&
+      week.days.filter((day) => day.group !== "fish").length >= 2
+    );
+    assert.notEqual(weekIndex, -1, "Expected a week with two fish days and two non-fish days.");
+
+    const nonFishDays = plan.weeks[weekIndex].days.filter((day) => day.group !== "fish");
+    Object.assign(nonFishDays[0], {
       group: "vegetarian",
-      groupLabel: "Chay",
-      starch: "noodle",
-      soup: null,
-      side: null
+      groupLabel: groupLabels.vegetarian
     });
-    Object.assign(plan.weeks[0].days[4], {
-      main: "cơm cá chiên",
+    Object.assign(nonFishDays[1], {
       group: "fish",
-      groupLabel: "Cá",
-      starch: "rice"
+      groupLabel: groupLabels.fish
     });
 
-    assertValidationError(plan, /expected at most 2 fish entries, found 3/);
+    assertValidationError(
+      plan,
+      new RegExp(`weeks\\[${weekIndex}\\] expected at most 2 fish entries, found 3`)
+    );
   });
 
   it("rejects redistributed days even when the global date range is complete", () => {

@@ -35,6 +35,18 @@ function assertNoAvoidableRepeats(days, field, options) {
   }
 }
 
+function assertValidGeneratedPlan(runDate, options) {
+  const plan = buildRollingPlan(runDate, options);
+
+  try {
+    validatePlan(plan);
+  } catch (error) {
+    throw new Error(`${runDate.toISOString()} generated invalid plan ${plan.metadata.startDate}: ${error.message}`);
+  }
+
+  return plan;
+}
+
 describe("buildRollingPlan", () => {
   it("prefers non-previous-week options that still satisfy category rules", () => {
     const options = ["last-week", "blocked", "fresh"];
@@ -83,6 +95,37 @@ describe("buildRollingPlan", () => {
     assert.equal(firstWeekStarches.filter((starch) => starch === "noodle").length, 2);
     assert.equal(plan.metadata.generatedAt, "2026-06-12T01:00:00.000Z");
     assert.doesNotThrow(() => validatePlan(plan));
+  });
+
+  it("avoids same-week fish duplicates when noodle slots repeat", () => {
+    const plan = assertValidGeneratedPlan(new Date("2026-08-07T01:00:00.000Z"), {
+      planVariant: "nguyenfamily"
+    });
+    const duplicateProneWeek = plan.weeks[3];
+    const mains = duplicateProneWeek.days.map((day) => day.main);
+
+    assert.equal(mains.filter((main) => main === "bánh canh cá").length, 1);
+    assert.equal(new Set(mains).size, mains.length);
+  });
+
+  it("validates ten years of scheduled Friday runs with previous plan carryover", () => {
+    let previousPlan = null;
+
+    for (let week = 0; week < 520; week += 1) {
+      const runDate = new Date(Date.UTC(2026, 0, 2 + week * 7, 1, 0, 0));
+      previousPlan = assertValidGeneratedPlan(runDate, {
+        previousPlan,
+        planVariant: "nguyenfamily"
+      });
+    }
+  });
+
+  it("validates two years of manual dispatch dates", () => {
+    for (let day = 0; day < 730; day += 1) {
+      assertValidGeneratedPlan(new Date(Date.UTC(2026, 0, 1 + day, 1, 0, 0)), {
+        planVariant: "nguyenfamily"
+      });
+    }
   });
 
   it("does not repeat breakfast within a week", () => {

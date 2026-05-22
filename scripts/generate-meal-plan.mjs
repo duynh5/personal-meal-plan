@@ -115,7 +115,7 @@ function mainOptionsFor(group, starch) {
 
 function mainDishScore(dish, usedNames, previousWeekMains, rollingMains) {
   return (
-    (usedNames.has(dish.name) ? 1000 : 0) +
+    (usedNames.has(dish.name) ? 5000 : 0) +
     (rollingMains.has(dish.name) ? 700 : 0) +
     (previousWeekMains.has(dish.name) ? 500 : 0)
   );
@@ -241,7 +241,7 @@ function chooseSide(list, seed, weekItems, previousWeekItems, rollingItems, prev
     seed,
     () => true,
     (item) =>
-      (weekItems.has(item) ? 1000 : 0) +
+      (weekItems.has(item) ? 5000 : 0) +
       (rollingItems.has(item) ? 700 : 0) +
       (previousWeekItems.has(item) ? 500 : 0) +
       (item === previousSide ? 100 : 0)
@@ -254,7 +254,7 @@ function chooseSoup(seed, weekSoups, previousWeekSoups, rollingSoups, previousSo
     seed,
     () => true,
     (item) =>
-      (weekSoups.has(item.name) ? 1000 : 0) +
+      (weekSoups.has(item.name) ? 5000 : 0) +
       (rollingSoups.has(item.name) ? 700 : 0) +
       (previousWeekSoups.has(item.name) ? 500 : 0) +
       (item.name === previousSoup ? 100 : 0) +
