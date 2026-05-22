@@ -1,78 +1,369 @@
 {
   "breakfasts": [
-    { "name": "bánh mì bơ đg", "category": "bread" },
-    { "name": "bánh bao", "category": "steamedBun" },
-    { "name": "bánh giò", "category": "riceCake" },
-    { "name": "xôi chiên nc tương", "category": "stickyRice" },
-    { "name": "bánh ướt", "category": "riceRoll" },
-    { "name": "bánh mì phomai chuối", "category": "bread" },
-    { "name": "bánh mì 7 hổ", "category": "bread" },
-    { "name": "há cảo tôm", "category": "dumpling" },
-    { "name": "hoành thánh", "category": "dumpling" },
-    { "name": "tàu hủ", "category": "tofu" },
-    { "name": "mì nước tương", "category": "noodle" },
-    { "name": "bắp luộc", "category": "corn" },
-    { "name": "xôi bắp", "category": "stickyRice" },
-    { "name": "xôi mặn", "category": "stickyRice" },
-    { "name": "xôi ngọt", "category": "stickyRice" },
-    { "name": "bánh mì má hải", "category": "bread" },
-    { "name": "bánh cuốn tây hồ", "category": "riceRoll" }
+    {
+      "name": "bánh mì bơ đg",
+      "category": "bread"
+    },
+    {
+      "name": "bánh bao",
+      "category": "steamedBun"
+    },
+    {
+      "name": "bánh giò",
+      "category": "riceCake"
+    },
+    {
+      "name": "xôi chiên nc tương",
+      "category": "stickyRice"
+    },
+    {
+      "name": "bánh ướt",
+      "category": "riceRoll"
+    },
+    {
+      "name": "bánh mì phomai chuối",
+      "category": "bread"
+    },
+    {
+      "name": "bánh mì 7 hổ",
+      "category": "bread"
+    },
+    {
+      "name": "há cảo tôm",
+      "category": "dumpling"
+    },
+    {
+      "name": "hoành thánh",
+      "category": "dumpling"
+    },
+    {
+      "name": "tàu hủ",
+      "category": "tofu"
+    },
+    {
+      "name": "mì nước tương",
+      "category": "noodle"
+    },
+    {
+      "name": "bắp luộc",
+      "category": "corn"
+    },
+    {
+      "name": "xôi bắp",
+      "category": "stickyRice"
+    },
+    {
+      "name": "xôi mặn",
+      "category": "stickyRice"
+    },
+    {
+      "name": "xôi ngọt",
+      "category": "stickyRice"
+    },
+    {
+      "name": "bánh mì má hải",
+      "category": "bread"
+    },
+    {
+      "name": "bánh cuốn tây hồ",
+      "category": "riceRoll"
+    }
   ],
   "mains": [
-    { "name": "cơm bò bít tết + khoai tây", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm bò xào cà chua dưa leo", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo ba rọi kho", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo kho tàu", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo kho mặn", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo kho đậu hủ", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo cốt lết chiên", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo tấm nướng", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo quay cải chua", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo ragu", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm heo thịt bằm chiên", "group": "beefPork", "starch": "rice" },
-    { "name": "cơm gà luộc nước mắm", "group": "chickenEgg", "starch": "rice" },
-    { "name": "cơm gà hấp muối", "group": "chickenEgg", "starch": "rice" },
-    { "name": "cơm gà nướng muối", "group": "chickenEgg", "starch": "rice" },
-    { "name": "cơm gà kho gừng", "group": "chickenEgg", "starch": "rice" },
-    { "name": "cơm gà kho tỏi ớt", "group": "chickenEgg", "starch": "rice" },
-    { "name": "cháo gà gỏi", "group": "chickenEgg", "starch": "porridge" },
-    { "name": "cơm cá cơm kho + trứng chiên thịt bằm", "group": "fish", "starch": "rice" },
-    { "name": "cơm cá chưng tương + nắm mèo + bún tàu", "group": "fish", "starch": "rice" },
-    { "name": "cơm cá chiên", "group": "fish", "starch": "rice" },
-    { "name": "cơm cá kho", "group": "fish", "starch": "rice" },
-    { "name": "cơm tôm rang thịt ba rọi", "group": "beefPork", "starch": "rice" },
-    { "name": "nui bò bầm", "group": "beefPork", "starch": "noodle" },
-    { "name": "cơm cà tím kho (mỡ hành)", "group": "vegetarian", "starch": "rice" },
-    { "name": "bún bò xáo", "group": "beefPork", "starch": "noodle" },
-    { "name": "bún heo mộc", "group": "beefPork", "starch": "noodle" },
-    { "name": "bún thịt nướng", "group": "beefPork", "starch": "noodle" },
-    { "name": "bún chả giò", "group": "beefPork", "starch": "noodle" },
-    { "name": "cơm chay tàu hủ rau củ", "group": "vegetarian", "starch": "rice" },
-    { "name": "bún nước tương tàu hủ", "group": "vegetarian", "starch": "noodle" },
-    { "name": "mì xào chay", "group": "vegetarian", "starch": "noodle" },
-    { "name": "mì heo xào", "group": "beefPork", "starch": "noodle" },
-    { "name": "mì gà nước", "group": "chickenEgg", "starch": "noodle" },
-    { "name": "bánh canh heo giò", "group": "beefPork", "starch": "noodle" },
-    { "name": "bánh canh cá", "group": "fish", "starch": "noodle" }
+    {
+      "name": "cơm bò bít tết + khoai tây",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm bò xào cà chua dưa leo",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo ba rọi kho",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo kho tàu",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo kho mặn",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo kho đậu hủ",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo cốt lết chiên",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo tấm nướng",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo quay cải chua",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo ragu",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo thịt bằm chiên",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm gà luộc nước mắm",
+      "group": "chickenEgg",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm gà hấp muối",
+      "group": "chickenEgg",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm gà nướng muối",
+      "group": "chickenEgg",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm gà kho gừng",
+      "group": "chickenEgg",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm gà kho tỏi ớt",
+      "group": "chickenEgg",
+      "starch": "rice"
+    },
+    {
+      "name": "cháo gà gỏi",
+      "group": "chickenEgg",
+      "starch": "porridge"
+    },
+    {
+      "name": "cơm cá cơm kho + trứng chiên thịt bằm",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá chưng tương + nắm mèo + bún tàu",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá chiên",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá kho",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm tôm rang thịt ba rọi",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "nui bò bầm",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "cơm cà tím kho (mỡ hành)",
+      "group": "vegetarian",
+      "starch": "rice"
+    },
+    {
+      "name": "bún bò xáo",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "bún heo mộc",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "bún thịt nướng",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "bún chả giò",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "cơm chay tàu hủ rau củ",
+      "group": "vegetarian",
+      "starch": "rice"
+    },
+    {
+      "name": "bún nước tương tàu hủ",
+      "group": "vegetarian",
+      "starch": "noodle"
+    },
+    {
+      "name": "mì xào chay",
+      "group": "vegetarian",
+      "starch": "noodle"
+    },
+    {
+      "name": "mì heo xào",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "mì gà nước",
+      "group": "chickenEgg",
+      "starch": "noodle"
+    },
+    {
+      "name": "bánh canh heo giò",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "bánh canh cá",
+      "group": "fish",
+      "starch": "noodle"
+    },
+    {
+      "name": "cơm heo kho măng",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "bánh xèo",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "bánh bèo",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "bánh hỏi thịt quay",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
+      "name": "hủ tíu lẩu cá thác lác",
+      "group": "fish",
+      "starch": "noodle"
+    },
+    {
+      "name": "cơm heo cà vạc xi",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo xay chiên",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo hành cần xào",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo ba rọi đậu que xào",
+      "group": "beefPork",
+      "starch": "rice"
+    }
   ],
   "soups": [
-    { "name": "canh khoai mỡ", "profile": "light" },
-    { "name": "canh bí đỏ", "profile": "light" },
-    { "name": "canh bí đao", "profile": "light" },
-    { "name": "canh bầu", "profile": "light" },
-    { "name": "canh súp thịt heo", "profile": "protein" },
-    { "name": "canh khoai sọ", "profile": "light" },
-    { "name": "canh cải bó xôi", "profile": "light" },
-    { "name": "canh rau dền", "profile": "light" },
-    { "name": "canh rau mồng tơi", "profile": "light" },
-    { "name": "canh cá thác lác thơm cà", "profile": "protein" },
-    { "name": "canh chua", "profile": "light" },
-    { "name": "canh bún tàu thịt bằm", "profile": "protein" },
-    { "name": "canh nấm giò lụa", "profile": "protein" },
-    { "name": "canh cải xanh", "profile": "light" },
-    { "name": "canh rau muống tôm", "profile": "protein" },
-    { "name": "canh rau tần ô", "profile": "light" },
-    { "name": "canh xà lách xoong", "profile": "light" }
+    {
+      "name": "canh khoai mỡ",
+      "profile": "light"
+    },
+    {
+      "name": "canh bí đỏ",
+      "profile": "light"
+    },
+    {
+      "name": "canh bí đao",
+      "profile": "light"
+    },
+    {
+      "name": "canh bầu",
+      "profile": "light"
+    },
+    {
+      "name": "canh súp thịt heo",
+      "profile": "protein"
+    },
+    {
+      "name": "canh khoai sọ",
+      "profile": "light"
+    },
+    {
+      "name": "canh cải bó xôi",
+      "profile": "light"
+    },
+    {
+      "name": "canh rau dền",
+      "profile": "light"
+    },
+    {
+      "name": "canh rau mồng tơi",
+      "profile": "light"
+    },
+    {
+      "name": "canh cá thác lác thơm cà",
+      "profile": "protein"
+    },
+    {
+      "name": "canh chua",
+      "profile": "light"
+    },
+    {
+      "name": "canh bún tàu thịt bằm",
+      "profile": "protein"
+    },
+    {
+      "name": "canh nấm giò lụa",
+      "profile": "protein"
+    },
+    {
+      "name": "canh cải xanh",
+      "profile": "light"
+    },
+    {
+      "name": "canh rau muống tôm",
+      "profile": "protein"
+    },
+    {
+      "name": "canh rau tần ô",
+      "profile": "light"
+    },
+    {
+      "name": "canh xà lách xoong",
+      "profile": "light"
+    },
+    {
+      "name": "canh cá cà chua",
+      "profile": "protein"
+    }
   ],
   "sides": [
     "bắp cải xào",
