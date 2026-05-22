@@ -5,7 +5,9 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 ## Nguồn Sự Thật
 
 - Món ăn nằm trong `data/menu.json`; không chép danh sách món vào hướng dẫn này.
-- Trong `data/menu.json`, bữa sáng dùng `{ "name", "category" }` với `category` là nhãn tiếng Anh; canh dùng `{ "name", "profile" }` với `profile` là `light` hoặc `protein`.
+- Trong `data/menu.json`, bữa sáng dùng `{ "name", "category", "vegetarian" }` với `category` là nhãn tiếng Anh.
+- Trong `data/menu.json`, canh dùng `{ "name", "profile", "vegetarian" }` với `profile` là `light` hoặc `protein`.
+- Trong `data/menu.json`, xào/luộc dùng `{ "name", "vegetarian" }`.
 - Chuẩn hóa và kiểm tra cấu trúc menu nằm trong `scripts/meal-plan/menu.mjs`.
 - Script sinh kế hoạch 4 tuần: `scripts/generate-meal-plan.mjs`.
 - Script kiểm tra kế hoạch 4 tuần: `scripts/validate-plan.mjs`.
@@ -34,6 +36,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
   - 2 ngày mì, bún, hoặc bánh canh.
 - Ngày chay là mùng 1 và ngày 15 âm lịch Việt Nam, được xác định tự động bằng `scripts/lunar.mjs`.
 - Khi có ngày chay trong tuần, ngày đó thay thế một ngày mặn; các ngày còn lại vẫn cân bằng nhóm món nhiều nhất có thể.
+- Vào ngày chay, bữa sáng, món chính, canh, và xào/luộc nếu xuất hiện đều phải có metadata chay hợp lệ.
 - Ngày thường có thể ăn món chay hoặc món mặn.
 - Bữa sáng, món chính, món canh, và món xào/luộc không nên lặp lại trong toàn bộ kế hoạch 4 tuần nếu còn lựa chọn khác phù hợp.
 - Khi chọn canh cho bữa cơm, ưu tiên canh có `profile` là `light`; canh `protein` vẫn là lựa chọn dự phòng hợp lệ.

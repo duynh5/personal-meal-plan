@@ -1,21 +1,10 @@
 import { lunarDateLabel } from "../lunar.mjs";
 import { createWeekDishes } from "../week-dishes.mjs";
 import { toDisplayDate, toIsoDate } from "./dates.mjs";
+import { shouldIncludeRiceSides, vegetarianNoteForDays } from "./menu-rules.mjs";
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-function vegetarianNoteForDays(days) {
-  const vegetarianDays = days.filter((day) => day.vegetarianDay);
-
-  if (vegetarianDays.length === 0) {
-    return "Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.";
-  }
-
-  return `Có ngày chay âm lịch: ${vegetarianDays
-    .map((day) => `${day.weekday} ${day.displayDate}`)
-    .join(", ")}.`;
 }
 
 export function createWeekDishesFromWeek(week) {
@@ -82,22 +71,26 @@ function dayMatchesCurrentRules(day, date, context) {
 
   const { groupLabels, isVegetarianLunarDay, menu, weekdayNames } = context;
   const menuDish = menu.mainsByName.get(day.main);
+  const menuBreakfast = menu.breakfastByName.get(day.breakfast);
+  const menuSoup = menu.soupByName.get(day.soup);
+  const menuSide = menu.sideByName.get(day.side);
   const vegetarianDay = isVegetarianLunarDay(date);
-  const hasRiceSides = !vegetarianDay && menuDish?.starch === "rice";
+  const hasRiceSides = shouldIncludeRiceSides(menu, vegetarianDay, menuDish?.starch);
 
   return (
     day.displayDate === toDisplayDate(date) &&
     day.weekday === weekdayNames[date.getUTCDay()] &&
     day.lunarDate === lunarDateLabel(date) &&
     day.vegetarianDay === vegetarianDay &&
-    menu.breakfastByName.has(day.breakfast) &&
+    menuBreakfast &&
+    (!vegetarianDay || menuBreakfast.vegetarian) &&
     menuDish &&
     day.group === menuDish.group &&
     day.groupLabel === groupLabels[menuDish.group] &&
     day.starch === menuDish.starch &&
     (!vegetarianDay || day.group === "vegetarian") &&
-    (day.soup === null || menu.soupByName.has(day.soup)) &&
-    (day.side === null || menu.sides.includes(day.side)) &&
+    (day.soup === null || (menuSoup && (!vegetarianDay || menuSoup.vegetarian))) &&
+    (day.side === null || (menuSide && (!vegetarianDay || menuSide.vegetarian))) &&
     (hasRiceSides ? isNonEmptyString(day.soup) && isNonEmptyString(day.side) : day.soup === null && day.side === null)
   );
 }

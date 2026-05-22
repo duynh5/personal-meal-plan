@@ -14,6 +14,7 @@ import {
   toIsoDate
 } from "./meal-plan/dates.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
+import { breakfastItemsForDay, shouldIncludeRiceSides, sideItemsForDay, soupItemsForDay } from "./meal-plan/menu-rules.mjs";
 import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
 import { createWeekDishesFromWeek, isReusableWeek, reusableWeeksByStartDate } from "./meal-plan/reusable-weeks.mjs";
 import { addWeekToRolling, weekRepeatsRollingItems } from "./meal-plan/rolling-dishes.mjs";
@@ -236,21 +237,23 @@ function chooseVegetarianDish(starch, seed, previousWeekMains, rollingMains) {
 }
 
 function chooseSide(list, seed, weekItems, previousWeekItems, rollingItems, previousSide) {
-  return chooseScoredOption(
+  const side = chooseScoredOption(
     list,
     seed,
     () => true,
     (item) =>
-      (weekItems.has(item) ? 5000 : 0) +
-      (rollingItems.has(item) ? 700 : 0) +
-      (previousWeekItems.has(item) ? 500 : 0) +
-      (item === previousSide ? 100 : 0)
+      (weekItems.has(item.name) ? 5000 : 0) +
+      (rollingItems.has(item.name) ? 700 : 0) +
+      (previousWeekItems.has(item.name) ? 500 : 0) +
+      (item.name === previousSide ? 100 : 0)
   );
+
+  return side?.name ?? null;
 }
 
-function chooseSoup(seed, weekSoups, previousWeekSoups, rollingSoups, previousSoup) {
+function chooseSoup(list, seed, weekSoups, previousWeekSoups, rollingSoups, previousSoup) {
   const soup = chooseScoredOption(
-    menu.soups,
+    list,
     seed,
     () => true,
     (item) =>
@@ -264,9 +267,10 @@ function chooseSoup(seed, weekSoups, previousWeekSoups, rollingSoups, previousSo
   return soup?.name ?? null;
 }
 
-function chooseBreakfast(seed, weekDishes, previousWeekDishes, rollingDishes, previousBreakfastCategory) {
+function chooseBreakfast(seed, weekDishes, previousWeekDishes, rollingDishes, previousBreakfastCategory, vegetarianDay) {
+  const options = breakfastItemsForDay(menu, vegetarianDay);
   const breakfast = chooseScoredOption(
-    menu.breakfasts,
+    options,
     seed,
     (item) => !weekDishes.breakfasts.has(item.name),
     (item) =>
@@ -291,14 +295,15 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
   const previousBreakfastName = weekDishes.lastBreakfast ?? previousWeekDishes.lastBreakfast;
   const previousBreakfastCategory = menu.breakfastByName.get(previousBreakfastName)?.category;
+  const vegetarianDay = isVegetarianLunarDay(date);
   const breakfast = chooseBreakfast(
     seed + weekIndex * 11,
     weekDishes,
     previousWeekDishes,
     rollingDishes,
-    previousBreakfastCategory
+    previousBreakfastCategory,
+    vegetarianDay
   );
-  const vegetarianDay = isVegetarianLunarDay(date);
   const dish = vegetarianDay
     ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains)
     : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains);
@@ -312,14 +317,16 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   );
   weekDishes.mains.add(dish.name);
 
-  const hasRiceSides = !vegetarianDay && dish.starch === "rice";
+  const hasRiceSides = shouldIncludeRiceSides(menu, vegetarianDay, dish.starch);
   const previousSoup = weekDishes.lastSoup ?? previousWeekDishes.lastSoup;
   const previousSide = weekDishes.lastSide ?? previousWeekDishes.lastSide;
+  const soupOptions = soupItemsForDay(menu, vegetarianDay);
+  const sideOptions = sideItemsForDay(menu, vegetarianDay);
   const soup = hasRiceSides
-    ? chooseSoup(seed + 3, weekDishes.soups, previousWeekDishes.soups, rollingDishes.soups, previousSoup)
+    ? chooseSoup(soupOptions, seed + 3, weekDishes.soups, previousWeekDishes.soups, rollingDishes.soups, previousSoup)
     : null;
   const side = hasRiceSides
-    ? chooseSide(menu.sides, seed + 7, weekDishes.sides, previousWeekDishes.sides, rollingDishes.sides, previousSide)
+    ? chooseSide(sideOptions, seed + 7, weekDishes.sides, previousWeekDishes.sides, rollingDishes.sides, previousSide)
     : null;
 
   if (soup) {

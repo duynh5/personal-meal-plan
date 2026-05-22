@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { buildRollingPlan, chooseRotatedOptionForTest } from "./generate-meal-plan.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
+import { breakfastItemsForDay } from "./meal-plan/menu-rules.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const menu = readMenu(new URL("../data/menu.json", import.meta.url), {
@@ -32,6 +33,46 @@ function assertNoAvoidableRepeats(days, field, options) {
 
     assert.ok(!seen.has(value) || seen.size >= options.length, `${field} repeats ${value} before options are exhausted`);
     seen.add(value);
+  }
+}
+
+function eligibleBreakfasts(day, rollingBreakfasts, weeklyBreakfasts) {
+  const options = breakfastItemsForDay(menu, day.vegetarianDay);
+  const freshEligibleBreakfasts = options.filter(
+    (item) => !rollingBreakfasts.has(item.name) && !weeklyBreakfasts.has(item.name)
+  );
+
+  return freshEligibleBreakfasts.length > 0
+    ? freshEligibleBreakfasts
+    : options.filter((item) => !weeklyBreakfasts.has(item.name));
+}
+
+function assertBreakfastCategoriesSpreadWhenAvailable(plan) {
+  const rollingBreakfasts = new Set();
+
+  for (const week of plan.weeks) {
+    const weeklyBreakfasts = new Set();
+    const weeklyCategories = new Set();
+
+    for (const day of week.days) {
+      const breakfast = menu.breakfastByName.get(day.breakfast);
+      const options = eligibleBreakfasts(day, rollingBreakfasts, weeklyBreakfasts);
+
+      if (weeklyCategories.has(breakfast.category)) {
+        assert.equal(
+          options.some((item) => !weeklyCategories.has(item.category)),
+          false,
+          `${week.title} ${day.weekday} repeats breakfast category ${breakfast.category} while another category is eligible`
+        );
+      }
+
+      weeklyBreakfasts.add(day.breakfast);
+      weeklyCategories.add(breakfast.category);
+    }
+
+    for (const breakfast of weeklyBreakfasts) {
+      rollingBreakfasts.add(breakfast);
+    }
   }
 }
 
@@ -91,6 +132,7 @@ describe("buildRollingPlan", () => {
     assert.equal(firstDay.date, "2026-06-15");
     assert.equal(firstDay.vegetarianDay, true);
     assert.equal(firstDay.group, "vegetarian");
+    assert.equal(menu.breakfastByName.get(firstDay.breakfast).vegetarian, true);
     assert.equal(firstWeekStarches.filter((starch) => starch === "rice").length, 3);
     assert.equal(firstWeekStarches.filter((starch) => starch === "noodle").length, 2);
     assert.equal(plan.metadata.generatedAt, "2026-06-12T01:00:00.000Z");
@@ -174,11 +216,7 @@ describe("buildRollingPlan", () => {
   it("spreads breakfast categories within each week when options are available", () => {
     const plan = buildRollingPlan(new Date("2026-05-09T01:00:00.000Z"), { planVariant: "alt-1" });
 
-    for (const week of plan.weeks) {
-      const categories = week.days.map((day) => menu.breakfastByName.get(day.breakfast).category);
-
-      assert.equal(new Set(categories).size, categories.length);
-    }
+    assertBreakfastCategoriesSpreadWhenAvailable(plan);
   });
 
   it("prefers light soups for rice dinners", () => {

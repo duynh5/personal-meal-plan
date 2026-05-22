@@ -127,29 +127,29 @@ Ghi chú: Có ngày chay âm lịch: Thứ 2 15/06/2026.
 ### Thứ 2 - 15/06/2026
 
 - Ngày âm: 1/5 âm lịch
-- Bữa sáng: xôi chiên nc tương
+- Bữa sáng: mì gói (chay)
 - Món chính: mì xào chay
 
 ### Thứ 3 - 16/06/2026
 
 - Ngày âm: 2/5 âm lịch
-- Bữa sáng: bánh mì phomai chuối
-- Món mặn chính: cơm cá chiên
+- Bữa sáng: cơm chiên ớt xanh (chay)
+- Món mặn chính: cơm cá hồi nướng
 - Món canh: canh bí đao
 - Món xào/luộc: bắp cải xào
 
 ### Thứ 4 - 17/06/2026
 
 - Ngày âm: 3/5 âm lịch
-- Bữa sáng: bánh cuốn tây hồ
-- Món mặn chính: cơm gà nướng muối
+- Bữa sáng: xôi chiên nc tương
+- Món mặn chính: cơm gà hấp muối
 - Món canh: canh khoai sọ
 - Món xào/luộc: cà rốt xào
 
 ### Thứ 5 - 18/06/2026
 
 - Ngày âm: 4/5 âm lịch
-- Bữa sáng: bánh bao
+- Bữa sáng: bánh mì phomai chuối
 - Món mặn chính: cơm heo kho tàu
 - Món canh: canh rau dền
 - Món xào/luộc: cà rốt luộc
@@ -157,5 +157,5 @@ Ghi chú: Có ngày chay âm lịch: Thứ 2 15/06/2026.
 ### Thứ 6 - 19/06/2026
 
 - Ngày âm: 5/5 âm lịch
-- Bữa sáng: hoành thánh
+- Bữa sáng: mì gói
 - Món mặn chính: bánh canh cá

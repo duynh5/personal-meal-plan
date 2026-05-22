@@ -2,71 +2,108 @@
   "breakfasts": [
     {
       "name": "bánh mì bơ đg",
-      "category": "bread"
+      "category": "bread",
+      "vegetarian": true
     },
     {
       "name": "bánh bao",
-      "category": "steamedBun"
+      "category": "steamedBun",
+      "vegetarian": false
     },
     {
       "name": "bánh giò",
-      "category": "riceCake"
+      "category": "riceCake",
+      "vegetarian": false
     },
     {
       "name": "xôi chiên nc tương",
-      "category": "stickyRice"
+      "category": "stickyRice",
+      "vegetarian": true
     },
     {
       "name": "bánh ướt",
-      "category": "riceRoll"
+      "category": "riceRoll",
+      "vegetarian": false
     },
     {
       "name": "bánh mì phomai chuối",
-      "category": "bread"
+      "category": "bread",
+      "vegetarian": true
     },
     {
       "name": "bánh mì 7 hổ",
-      "category": "bread"
+      "category": "bread",
+      "vegetarian": false
+    },
+    {
+      "name": "bánh mì ốp la",
+      "category": "bread",
+      "vegetarian": false
     },
     {
       "name": "há cảo tôm",
-      "category": "dumpling"
+      "category": "dumpling",
+      "vegetarian": false
     },
     {
       "name": "hoành thánh",
-      "category": "dumpling"
+      "category": "dumpling",
+      "vegetarian": false
     },
     {
       "name": "tàu hủ",
-      "category": "tofu"
+      "category": "tofu",
+      "vegetarian": true
     },
     {
       "name": "mì nước tương",
-      "category": "noodle"
+      "category": "noodle",
+      "vegetarian": true
+    },
+    {
+      "name": "mì gói",
+      "category": "noodle",
+      "vegetarian": false
+    },
+    {
+      "name": "mì gói (chay)",
+      "category": "noodle",
+      "vegetarian": true
     },
     {
       "name": "bắp luộc",
-      "category": "corn"
+      "category": "corn",
+      "vegetarian": true
+    },
+    {
+      "name": "cơm chiên ớt xanh (chay)",
+      "category": "rice",
+      "vegetarian": true
     },
     {
       "name": "xôi bắp",
-      "category": "stickyRice"
+      "category": "stickyRice",
+      "vegetarian": true
     },
     {
       "name": "xôi mặn",
-      "category": "stickyRice"
+      "category": "stickyRice",
+      "vegetarian": false
     },
     {
       "name": "xôi ngọt",
-      "category": "stickyRice"
+      "category": "stickyRice",
+      "vegetarian": true
     },
     {
       "name": "bánh mì má hải",
-      "category": "bread"
+      "category": "bread",
+      "vegetarian": false
     },
     {
       "name": "bánh cuốn tây hồ",
-      "category": "riceRoll"
+      "category": "riceRoll",
+      "vegetarian": false
     }
   ],
   "mains": [
@@ -151,6 +188,11 @@
       "starch": "rice"
     },
     {
+      "name": "cơm trứng chiên thịt bằm và lạp xưởng",
+      "group": "chickenEgg",
+      "starch": "rice"
+    },
+    {
       "name": "cháo gà gỏi",
       "group": "chickenEgg",
       "starch": "porridge"
@@ -172,6 +214,11 @@
     },
     {
       "name": "cơm cá kho",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá hồi nướng",
       "group": "fish",
       "starch": "rice"
     },
@@ -212,6 +259,11 @@
     },
     {
       "name": "cơm chay tàu hủ rau củ",
+      "group": "vegetarian",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm tàu hủ ky xào chay",
       "group": "vegetarian",
       "starch": "rice"
     },
@@ -294,90 +346,147 @@
   "soups": [
     {
       "name": "canh khoai mỡ",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh bí đỏ",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh bí đao",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh bầu",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh súp thịt heo",
-      "profile": "protein"
+      "profile": "protein",
+      "vegetarian": false
     },
     {
       "name": "canh khoai sọ",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh cải bó xôi",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh rau dền",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh rau mồng tơi",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh cá thác lác thơm cà",
-      "profile": "protein"
+      "profile": "protein",
+      "vegetarian": false
     },
     {
       "name": "canh chua",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh bún tàu thịt bằm",
-      "profile": "protein"
+      "profile": "protein",
+      "vegetarian": false
     },
     {
       "name": "canh nấm giò lụa",
-      "profile": "protein"
+      "profile": "protein",
+      "vegetarian": false
     },
     {
       "name": "canh cải xanh",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh rau muống tôm",
-      "profile": "protein"
+      "profile": "protein",
+      "vegetarian": false
     },
     {
       "name": "canh rau tần ô",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh xà lách xoong",
-      "profile": "light"
+      "profile": "light",
+      "vegetarian": false
     },
     {
       "name": "canh cá cà chua",
-      "profile": "protein"
+      "profile": "protein",
+      "vegetarian": false
     }
   ],
   "sides": [
-    "bắp cải xào",
-    "cà rốt xào",
-    "cà rốt luộc",
-    "đậu que xào",
-    "đậu que luộc",
-    "bông bí xào",
-    "rau muống xào",
-    "rau lang luộc",
-    "bầu luộc",
-    "giá hẹ xào",
-    "măng tây xào",
-    "khổ qua xào trứng",
-    "măng vàng xào"
+    {
+      "name": "bắp cải xào",
+      "vegetarian": true
+    },
+    {
+      "name": "cà rốt xào",
+      "vegetarian": true
+    },
+    {
+      "name": "cà rốt luộc",
+      "vegetarian": true
+    },
+    {
+      "name": "đậu que xào",
+      "vegetarian": true
+    },
+    {
+      "name": "đậu que luộc",
+      "vegetarian": true
+    },
+    {
+      "name": "bông bí xào",
+      "vegetarian": true
+    },
+    {
+      "name": "rau muống xào",
+      "vegetarian": true
+    },
+    {
+      "name": "rau lang luộc",
+      "vegetarian": true
+    },
+    {
+      "name": "bầu luộc",
+      "vegetarian": true
+    },
+    {
+      "name": "giá hẹ xào",
+      "vegetarian": true
+    },
+    {
+      "name": "măng tây xào",
+      "vegetarian": true
+    },
+    {
+      "name": "khổ qua xào trứng",
+      "vegetarian": false
+    },
+    {
+      "name": "măng vàng xào",
+      "vegetarian": true
+    }
   ]
 }

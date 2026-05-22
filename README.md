@@ -23,9 +23,11 @@ Mo `site/index.html` de xem giao dien local.
 ## Du lieu menu
 
 - `data/menu.json` la nguon du lieu mon an.
-- `breakfasts` dung object `{ "name", "category" }`; `category` la nhan tieng Anh de script rai deu loai bua sang.
-- `soups` dung object `{ "name", "profile" }`; `profile` la `light` hoac `protein` de uu tien canh nhe khi an com.
+- `breakfasts` dung object `{ "name", "category", "vegetarian" }`; `category` la nhan tieng Anh de script rai deu loai bua sang.
+- `soups` dung object `{ "name", "profile", "vegetarian" }`; `profile` la `light` hoac `protein` de uu tien canh nhe khi an com.
+- `sides` dung object `{ "name", "vegetarian" }`.
 - Ke hoach xuat ra van giu ten mon an dang chuoi, khong hien cac nhan metadata nay.
+- Ngay chay am lich chi duoc chon bua sang va mon chinh chay; neu co canh hoac xao/luoc thi cung phai co `vegetarian: true`.
 - Khi con lua chon hop le, script uu tien tranh trung `breakfast`, `main`, `soup`, va `side` trong toan bo ke hoach 4 tuan.
 
 ## Tu dong tren GitHub

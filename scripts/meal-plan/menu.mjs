@@ -7,6 +7,12 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.trim() !== "";
 }
 
+function validateVegetarianFlag(item, label, errors) {
+  if (typeof item.vegetarian !== "boolean") {
+    errors.push(`${label}.vegetarian must be a boolean.`);
+  }
+}
+
 function validateNamedMetadataItems(items, field, metadataField, isValidMetadata, errors) {
   const names = new Set();
 
@@ -36,27 +42,35 @@ function validateNamedMetadataItems(items, field, metadataField, isValidMetadata
     } else if (!isValidMetadata(item[metadataField])) {
       errors.push(`${label}.${metadataField} has invalid value "${item[metadataField]}".`);
     }
+    validateVegetarianFlag(item, label, errors);
   }
 }
 
-function validateStringItems(items, field, errors) {
+function validateSides(items, errors) {
   const names = new Set();
 
   if (!Array.isArray(items) || items.length === 0) {
-    errors.push(`data/menu.json must include a non-empty ${field} array.`);
+    errors.push("data/menu.json must include a non-empty sides array.");
     return;
   }
 
   for (const [index, item] of items.entries()) {
-    if (!isNonEmptyString(item)) {
-      errors.push(`${field}[${index}] must be a non-empty string.`);
-    } else if (item !== item.trim()) {
-      errors.push(`${field}[${index}] must not have leading or trailing whitespace.`);
-    } else if (names.has(item)) {
-      errors.push(`${field}[${index}] duplicates "${item}".`);
-    } else {
-      names.add(item);
+    const label = `sides[${index}]`;
+
+    if (!item || typeof item !== "object" || Array.isArray(item)) {
+      errors.push(`${label} must be an object.`);
+      continue;
     }
+    if (!isNonEmptyString(item.name)) {
+      errors.push(`${label}.name must be a non-empty string.`);
+    } else if (item.name !== item.name.trim()) {
+      errors.push(`${label}.name must not have leading or trailing whitespace.`);
+    } else if (names.has(item.name)) {
+      errors.push(`${label}.name duplicates "${item.name}".`);
+    } else {
+      names.add(item.name);
+    }
+    validateVegetarianFlag(item, label, errors);
   }
 }
 
@@ -120,7 +134,7 @@ export function normalizeMenu(menu, options = {}) {
   }
   validateMains(menu.mains, allowedGroups, allowedStarches, errors);
   validateNamedMetadataItems(menu.soups, "soups", "profile", (value) => soupProfiles.has(value), errors);
-  validateStringItems(menu.sides, "sides", errors);
+  validateSides(menu.sides, errors);
 
   const breakfasts = Array.isArray(menu.breakfasts) ? menu.breakfasts : [];
   const mains = Array.isArray(menu.mains) ? menu.mains : [];
@@ -134,6 +148,12 @@ export function normalizeMenu(menu, options = {}) {
   }
   if (!mains.some((dish) => dish?.group === "vegetarian")) {
     errors.push("data/menu.json needs at least one vegetarian main.");
+  }
+  if (!breakfasts.some((item) => item?.vegetarian)) {
+    errors.push("data/menu.json needs at least one vegetarian breakfast.");
+  }
+  if (!sides.some((item) => item?.vegetarian)) {
+    errors.push("data/menu.json needs at least one vegetarian side.");
   }
   for (const starch of requiredStarches) {
     if (!mains.some((dish) => dish?.group === "vegetarian" && dish.starch === starch)) {
@@ -149,13 +169,20 @@ export function normalizeMenu(menu, options = {}) {
     breakfasts,
     breakfastNames: breakfasts.map((item) => item.name),
     breakfastByName: new Map(breakfasts.map((item) => [item.name, item])),
+    vegetarianBreakfasts: breakfasts.filter((item) => item.vegetarian),
+    vegetarianBreakfastNames: breakfasts.filter((item) => item.vegetarian).map((item) => item.name),
     mains,
     mainsByName: new Map(mains.map((dish) => [dish.name, dish])),
     soups,
     soupNames: soups.map((item) => item.name),
     soupByName: new Map(soups.map((item) => [item.name, item])),
+    vegetarianSoups: soups.filter((item) => item.vegetarian),
+    vegetarianSoupNames: soups.filter((item) => item.vegetarian).map((item) => item.name),
     sides,
-    sideNames: sides
+    sideNames: sides.map((item) => item.name),
+    sideByName: new Map(sides.map((item) => [item.name, item])),
+    vegetarianSides: sides.filter((item) => item.vegetarian),
+    vegetarianSideNames: sides.filter((item) => item.vegetarian).map((item) => item.name)
   };
 }
 

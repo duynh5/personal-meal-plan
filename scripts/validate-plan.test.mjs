@@ -59,11 +59,11 @@ const groupLabels = {
 function validMenu() {
   return {
     breakfasts: [
-      { name: "breakfast 1", category: "bread" },
-      { name: "breakfast 2", category: "stickyRice" },
-      { name: "breakfast 3", category: "riceCake" },
-      { name: "breakfast 4", category: "dumpling" },
-      { name: "breakfast 5", category: "tofu" }
+      { name: "breakfast 1", category: "bread", vegetarian: true },
+      { name: "breakfast 2", category: "stickyRice", vegetarian: true },
+      { name: "breakfast 3", category: "riceCake", vegetarian: false },
+      { name: "breakfast 4", category: "dumpling", vegetarian: false },
+      { name: "breakfast 5", category: "tofu", vegetarian: true }
     ],
     mains: [
       { name: "fish rice", group: "fish", starch: "rice" },
@@ -72,13 +72,13 @@ function validMenu() {
       { name: "veg rice", group: "vegetarian", starch: "rice" },
       { name: "veg noodle", group: "vegetarian", starch: "noodle" }
     ],
-    soups: [{ name: "light soup", profile: "light" }],
-    sides: ["boiled greens"]
+    soups: [{ name: "light soup", profile: "light", vegetarian: false }],
+    sides: [{ name: "boiled greens", vegetarian: true }]
   };
 }
 
 describe("normalizeMenu", () => {
-  it("accepts breakfast categories and soup profiles", () => {
+  it("accepts breakfast categories, soup profiles, and vegetarian metadata", () => {
     assert.doesNotThrow(() => normalizeMenu(validMenu(), menuOptions));
   });
 
@@ -96,9 +96,18 @@ describe("normalizeMenu", () => {
     assert.throws(() => normalizeMenu(menu, menuOptions), /soups\[0\]\.profile has invalid value "heavy"/);
   });
 
+  it("rejects missing vegetarian metadata", () => {
+    const menu = validMenu();
+    delete menu.breakfasts[0].vegetarian;
+    delete menu.soups[0].vegetarian;
+    delete menu.sides[0].vegetarian;
+
+    assert.throws(() => normalizeMenu(menu, menuOptions), /vegetarian must be a boolean/);
+  });
+
   it("rejects duplicate soup names after normalization", () => {
     const menu = validMenu();
-    menu.soups.push({ name: "light soup", profile: "protein" });
+    menu.soups.push({ name: "light soup", profile: "protein", vegetarian: false });
 
     assert.throws(() => normalizeMenu(menu, menuOptions), /soups\[1\]\.name duplicates "light soup"/);
   });
@@ -184,6 +193,13 @@ describe("validatePlan", () => {
     plan.weeks[0].days[0].breakfast = "bữa sáng không có trong menu";
 
     assertValidationError(plan, /breakfast must exist in data\/menu\.json/);
+  });
+
+  it("rejects non-vegetarian breakfast on vegetarian lunar days", () => {
+    const plan = buildRollingPlan(new Date("2026-06-12T01:00:00.000Z"));
+    plan.weeks[0].days[0].breakfast = "mì gói";
+
+    assertValidationError(plan, /breakfast must be vegetarian on vegetarian lunar days/);
   });
 
   it("rejects duplicate breakfast dishes in the same week", () => {
@@ -272,6 +288,17 @@ describe("validatePlan", () => {
     plan.weeks[0].days[0].side = "rau không có trong menu";
 
     assertValidationError(plan, /side must exist in data\/menu\.json/);
+  });
+
+  it("rejects non-vegetarian soup and side on vegetarian lunar days", () => {
+    const plan = buildRollingPlan(new Date("2026-06-12T01:00:00.000Z"));
+    Object.assign(plan.weeks[0].days[0], {
+      soup: "canh khoai mỡ",
+      side: "khổ qua xào trứng"
+    });
+
+    assertValidationError(plan, /soup must be vegetarian on vegetarian lunar days/);
+    assertValidationError(plan, /side must be vegetarian on vegetarian lunar days/);
   });
 
   it("rejects avoidable soup repeats from the previous week", () => {

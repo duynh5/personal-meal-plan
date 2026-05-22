@@ -31,6 +31,7 @@ const breakfastCategoryLabels = new Map([
   ["corn", "Bắp"],
   ["dumpling", "Há cảo/hoành thánh"],
   ["noodle", "Mì"],
+  ["rice", "Cơm"],
   ["riceCake", "Bánh gạo"],
   ["riceRoll", "Bánh cuốn/ướt"],
   ["steamedBun", "Bánh bao"],
@@ -340,7 +341,7 @@ const menu = readMenu(menuPath, {
 validatePlan(plan);
 
 fs.mkdirSync(siteAssetsDir, { recursive: true });
-fs.writeFileSync(path.join(siteDir, "index.html"), renderHtml(plan, menu));
+fs.writeFileSync(path.join(siteDir, "index.html"), renderHtml(plan, menu).replace(/[ \t]+$/gm, ""));
 fs.copyFileSync(planPath, path.join(siteDir, "meal-plan.json"));
 fs.copyFileSync(cssPath, path.join(siteAssetsDir, "site.css"));
 fs.copyFileSync(themeCssPath, path.join(siteAssetsDir, "site-theme.css"));
