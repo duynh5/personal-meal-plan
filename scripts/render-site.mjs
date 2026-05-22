@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { readMenu } from "./meal-plan/menu.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -8,9 +9,38 @@ const rootDir = path.resolve(__dirname, "..");
 const siteDir = path.join(rootDir, "site");
 const siteAssetsDir = path.join(siteDir, "assets");
 const planPath = path.join(rootDir, "meal-plan.json");
+const menuPath = path.join(rootDir, "data", "menu.json");
 const cssPath = path.join(rootDir, "assets", "site.css");
 const themeCssPath = path.join(rootDir, "assets", "site-theme.css");
+const menuReferenceCssPath = path.join(rootDir, "assets", "menu-reference.css");
 const jsPath = path.join(rootDir, "assets", "site.js");
+
+const mainGroupLabels = new Map([
+  ["beefPork", "Bò/heo"],
+  ["fish", "Cá"],
+  ["chickenEgg", "Gà/trứng"],
+  ["vegetarian", "Chay"]
+]);
+const starchLabels = new Map([
+  ["rice", "Cơm"],
+  ["noodle", "Mì/bún/bánh canh"],
+  ["porridge", "Cháo"]
+]);
+const breakfastCategoryLabels = new Map([
+  ["bread", "Bánh mì"],
+  ["corn", "Bắp"],
+  ["dumpling", "Há cảo/hoành thánh"],
+  ["noodle", "Mì"],
+  ["riceCake", "Bánh gạo"],
+  ["riceRoll", "Bánh cuốn/ướt"],
+  ["steamedBun", "Bánh bao"],
+  ["stickyRice", "Xôi"],
+  ["tofu", "Đậu hủ"]
+]);
+const soupProfileLabels = new Map([
+  ["light", "Canh nhẹ"],
+  ["protein", "Canh đạm"]
+]);
 
 function escapeHtml(value) {
   return String(value)
@@ -18,6 +48,113 @@ function escapeHtml(value) {
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;");
+}
+
+function friendlyLabel(labels, value) {
+  return labels.get(value) ?? "Khác";
+}
+
+function countLabel(count) {
+  return `${count} món`;
+}
+
+function groupByLabel(items, labelForItem) {
+  const groups = new Map();
+
+  for (const item of items) {
+    const label = labelForItem(item);
+    if (!groups.has(label)) {
+      groups.set(label, []);
+    }
+    groups.get(label).push(item);
+  }
+
+  return [...groups.entries()].map(([label, groupItems]) => ({ label, items: groupItems }));
+}
+
+function renderDishList(items, metadataForItem = () => "") {
+  return `
+    <ul class="menu-reference__list">
+      ${items
+        .map((item) => {
+          const name = typeof item === "string" ? item : item.name;
+          const metadata = metadataForItem(item);
+          return `<li><span>${escapeHtml(name)}</span>${metadata}</li>`;
+        })
+        .join("")}
+    </ul>
+  `;
+}
+
+function renderMenuGroup(label, items, metadataForItem) {
+  return `
+    <article class="menu-reference__group">
+      <header>
+        <h4>${escapeHtml(label)}</h4>
+        <span>${escapeHtml(countLabel(items.length))}</span>
+      </header>
+      ${renderDishList(items, metadataForItem)}
+    </article>
+  `;
+}
+
+function renderReferenceSection(title, description, groups, metadataForItem) {
+  return `
+    <section class="menu-reference__section" aria-label="${escapeHtml(title)}">
+      <div class="menu-reference__section-heading">
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(description)}</p>
+      </div>
+      <div class="menu-reference__grid">
+        ${groups.map((group) => renderMenuGroup(group.label, group.items, metadataForItem)).join("")}
+      </div>
+    </section>
+  `;
+}
+
+function renderMenuReference(menu) {
+  const breakfastGroups = groupByLabel(menu.breakfasts, (item) =>
+    friendlyLabel(breakfastCategoryLabels, item.category)
+  );
+  const mainGroups = [...mainGroupLabels.entries()]
+    .map(([group, label]) => ({ label, items: menu.mains.filter((item) => item.group === group) }))
+    .filter((group) => group.items.length > 0);
+  const soupGroups = [...soupProfileLabels.entries()]
+    .map(([profile, label]) => ({ label, items: menu.soups.filter((item) => item.profile === profile) }))
+    .filter((group) => group.items.length > 0);
+
+  return `
+      <section class="menu-reference" id="menu-reference" aria-labelledby="menu-reference-title">
+        <div class="menu-reference__intro">
+          <div>
+            <p class="eyebrow">Kho món</p>
+            <h2 id="menu-reference-title">Món có thể lên lịch</h2>
+            <p>Danh sách tham khảo lấy trực tiếp từ menu hiện có, để người nhà biết những món có thể xuất hiện trong lịch ăn.</p>
+          </div>
+          <ul class="menu-reference__summary" aria-label="Số lượng món trong kho">
+            <li>${escapeHtml(countLabel(menu.breakfasts.length))} bữa sáng</li>
+            <li>${escapeHtml(countLabel(menu.mains.length))} món chính</li>
+            <li>${escapeHtml(countLabel(menu.soups.length))} món canh</li>
+            <li>${escapeHtml(countLabel(menu.sides.length))} xào/luộc</li>
+          </ul>
+        </div>
+        ${renderReferenceSection(
+          "Bữa sáng",
+          "Rải theo nhóm để dễ chọn và tránh lặp trong tuần.",
+          breakfastGroups
+        )}
+        ${renderReferenceSection(
+          "Món chính",
+          "Nhóm theo loại món mặn/chay; nhãn nhỏ cho biết dạng tinh bột.",
+          mainGroups,
+          (item) => `<small>${escapeHtml(friendlyLabel(starchLabels, item.starch))}</small>`
+        )}
+        ${renderReferenceSection("Canh", "Ưu tiên canh nhẹ khi bữa tối là cơm.", soupGroups)}
+        ${renderReferenceSection("Xào/luộc", "Món ăn kèm chỉ dùng cho bữa cơm tối.", [
+          { label: "Món rau", items: menu.sides }
+        ])}
+      </section>
+  `;
 }
 
 function formatGeneratedAt(value) {
@@ -108,7 +245,7 @@ function planSummary(plan) {
   return `${vegetarianDays} ngày chay · ${riceDinners} bữa cơm`;
 }
 
-function renderHtml(plan) {
+function renderHtml(plan, menu) {
   const updatedAt = formatGeneratedAt(plan.metadata.generatedAt);
   const period = planPeriod(plan);
   const summary = planSummary(plan);
@@ -122,6 +259,7 @@ function renderHtml(plan) {
     <title>${escapeHtml(plan.metadata.title)}</title>
     <link rel="stylesheet" href="assets/site.css">
     <link rel="stylesheet" href="assets/site-theme.css">
+    <link rel="stylesheet" href="assets/menu-reference.css">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Đến nội dung chính</a>
@@ -163,6 +301,7 @@ function renderHtml(plan) {
         <p id="today-status">Đang kiểm tra ngày hôm nay...</p>
         <div class="toolbar-actions">
           <button type="button" id="today-button">Đến hôm nay</button>
+          <a class="button-link" href="#menu-reference">Kho món</a>
           <button type="button" id="top-button">Lên đầu trang</button>
           <button type="button" id="print-button">In / lưu PDF</button>
         </div>
@@ -179,6 +318,8 @@ function renderHtml(plan) {
       </section>
 
       ${plan.weeks.map(renderWeek).join("")}
+
+      ${renderMenuReference(menu)}
     </main>
 
     <footer class="page-footer">
@@ -192,13 +333,18 @@ function renderHtml(plan) {
 }
 
 const plan = JSON.parse(fs.readFileSync(planPath, "utf8"));
+const menu = readMenu(menuPath, {
+  allowedGroups: new Set(mainGroupLabels.keys()),
+  allowedStarches: new Set(starchLabels.keys())
+});
 validatePlan(plan);
 
 fs.mkdirSync(siteAssetsDir, { recursive: true });
-fs.writeFileSync(path.join(siteDir, "index.html"), renderHtml(plan));
+fs.writeFileSync(path.join(siteDir, "index.html"), renderHtml(plan, menu));
 fs.copyFileSync(planPath, path.join(siteDir, "meal-plan.json"));
 fs.copyFileSync(cssPath, path.join(siteAssetsDir, "site.css"));
 fs.copyFileSync(themeCssPath, path.join(siteAssetsDir, "site-theme.css"));
+fs.copyFileSync(menuReferenceCssPath, path.join(siteAssetsDir, "menu-reference.css"));
 fs.copyFileSync(jsPath, path.join(siteAssetsDir, "site.js"));
 fs.writeFileSync(path.join(siteDir, ".nojekyll"), "");
 

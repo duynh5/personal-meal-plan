@@ -16,8 +16,9 @@ Mo `site/index.html` de xem giao dien local.
 ## Giao dien web
 
 - Giao dien su dung co dinh theme `Tuoi`.
-- Thanh thao tac gom: den mon hom nay, len dau trang, in/luu PDF.
+- Thanh thao tac gom: den mon hom nay, kho mon tham khao, len dau trang, in/luu PDF.
 - Tren mobile, dieu huong tuan duoc toi uu cho cuon ngang va tu dong danh dau tuan dang xem.
+- Trang co muc `Kho mon` duoc render tu `data/menu.json`, nhom theo loai de nguoi nha tham khao mon co the xuat hien trong lich.
 
 ## Du lieu menu
 
