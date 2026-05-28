@@ -183,7 +183,7 @@
       "starch": "rice"
     },
     {
-      "name": "cơm gà kho tỏi ớt",
+      "name": "cơm gà kho xả ớt",
       "group": "chickenEgg",
       "starch": "rice"
     },
@@ -219,6 +219,46 @@
     },
     {
       "name": "cơm cá hồi nướng",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá hú kho tộ",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá lóc mắm chưng",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá mực dồn thịt",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá diêu hồng chiên giòn",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá basa kho tiêu",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá trê chiên mắm gừng",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá rô kho nghệ",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm cá chim chiên nước mắm",
       "group": "fish",
       "starch": "rice"
     },
@@ -288,6 +328,11 @@
       "starch": "noodle"
     },
     {
+      "name": "hủ tíu gà xé",
+      "group": "chickenEgg",
+      "starch": "noodle"
+    },
+    {
       "name": "bánh canh heo giò",
       "group": "beefPork",
       "starch": "noodle"
@@ -323,6 +368,16 @@
       "starch": "noodle"
     },
     {
+      "name": "bún cá ngừ",
+      "group": "fish",
+      "starch": "noodle"
+    },
+    {
+      "name": "cháo cá lóc",
+      "group": "fish",
+      "starch": "porridge"
+    },
+    {
       "name": "cơm heo cà vạc xi",
       "group": "beefPork",
       "starch": "rice"
@@ -339,6 +394,11 @@
     },
     {
       "name": "cơm heo ba rọi đậu que xào",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm heo bằm xào cà tím",
       "group": "beefPork",
       "starch": "rice"
     }
