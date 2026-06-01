@@ -56,6 +56,11 @@
       "vegetarian": true
     },
     {
+      "name": "bún riêu",
+      "category": "noodle",
+      "vegetarian": false
+    },
+    {
       "name": "mì nước tương",
       "category": "noodle",
       "vegetarian": true
@@ -71,6 +76,11 @@
       "vegetarian": true
     },
     {
+      "name": "nui nước",
+      "category": "noodle",
+      "vegetarian": false
+    },
+    {
       "name": "bắp luộc",
       "category": "corn",
       "vegetarian": true
@@ -79,6 +89,11 @@
       "name": "cơm chiên ớt xanh (chay)",
       "category": "rice",
       "vegetarian": true
+    },
+    {
+      "name": "cơm chiên trứng",
+      "category": "rice",
+      "vegetarian": false
     },
     {
       "name": "xôi bắp",
