@@ -1,44 +1,4 @@
-# Kế hoạch ăn 4 tuần từ 01/06/2026
-
-## Tuần 01/06/2026 - 05/06/2026
-
-Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
-
-### Thứ 2 - 01/06/2026
-
-- Ngày âm: 16/4 âm lịch
-- Bữa sáng: xôi bắp
-- Món mặn chính: cơm cá cơm kho + trứng chiên thịt bằm
-- Món canh: canh bầu
-- Món xào/luộc: đậu que xào
-
-### Thứ 3 - 02/06/2026
-
-- Ngày âm: 17/4 âm lịch
-- Bữa sáng: bánh mì má hải
-- Món mặn chính: bún thịt nướng
-
-### Thứ 4 - 03/06/2026
-
-- Ngày âm: 18/4 âm lịch
-- Bữa sáng: bánh cuốn tây hồ
-- Món mặn chính: cơm gà kho gừng
-- Món canh: canh cải bó xôi
-- Món xào/luộc: bông bí xào
-
-### Thứ 5 - 04/06/2026
-
-- Ngày âm: 19/4 âm lịch
-- Bữa sáng: bánh bao
-- Món mặn chính: bánh canh cá
-
-### Thứ 6 - 05/06/2026
-
-- Ngày âm: 20/4 âm lịch
-- Bữa sáng: xôi mặn
-- Món mặn chính: cơm heo cốt lết chiên
-- Món canh: canh rau mồng tơi
-- Món xào/luộc: rau lang luộc
+# Kế hoạch ăn 4 tuần từ 08/06/2026
 
 ## Tuần 08/06/2026 - 12/06/2026
 
@@ -159,3 +119,41 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 - Món mặn chính: cơm cá rô kho nghệ
 - Món canh: canh xà lách xoong
 - Món xào/luộc: bầu luộc
+
+## Tuần 29/06/2026 - 03/07/2026
+
+Ghi chú: Có ngày chay âm lịch: Thứ 2 29/06/2026.
+
+### Thứ 2 - 29/06/2026
+
+- Ngày âm: 15/5 âm lịch
+- Bữa sáng: xôi bắp
+- Món chính: cơm chay tàu hủ rau củ
+
+### Thứ 3 - 30/06/2026
+
+- Ngày âm: 16/5 âm lịch
+- Bữa sáng: nui nước
+- Món mặn chính: cơm cá chiên
+- Món canh: canh bầu
+- Món xào/luộc: rau lang luộc
+
+### Thứ 4 - 01/07/2026
+
+- Ngày âm: 17/5 âm lịch
+- Bữa sáng: cơm chiên trứng
+- Món mặn chính: hủ tíu gà xé
+
+### Thứ 5 - 02/07/2026
+
+- Ngày âm: 18/5 âm lịch
+- Bữa sáng: bánh mì má hải
+- Món mặn chính: bún thịt nướng
+
+### Thứ 6 - 03/07/2026
+
+- Ngày âm: 19/5 âm lịch
+- Bữa sáng: bánh cuốn tây hồ
+- Món mặn chính: cơm cá trê chiên mắm gừng
+- Món canh: canh cải bó xôi
+- Món xào/luộc: đậu que xào
