@@ -303,6 +303,11 @@
       "starch": "noodle"
     },
     {
+      "name": "bún mộc",
+      "group": "beefPork",
+      "starch": "noodle"
+    },
+    {
       "name": "bún thịt nướng",
       "group": "beefPork",
       "starch": "noodle"
@@ -355,6 +360,11 @@
     {
       "name": "bánh canh cá",
       "group": "fish",
+      "starch": "noodle"
+    },
+    {
+      "name": "bột chiên",
+      "group": "chickenEgg",
       "starch": "noodle"
     },
     {
