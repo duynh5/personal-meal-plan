@@ -2,6 +2,7 @@ import { lunarDateLabel } from "../lunar.mjs";
 import { createWeekDishes } from "../week-dishes.mjs";
 import { toDisplayDate, toIsoDate } from "./dates.mjs";
 import { shouldIncludeRiceSides, vegetarianNoteForDays } from "./menu-rules.mjs";
+import { hasConsecutiveWateryMains } from "./starch-rules.mjs";
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -99,12 +100,13 @@ function hasNoRepeatedValues(values) {
   return new Set(values).size === values.length;
 }
 
-function hasReusableMealVariety(days) {
+function hasReusableMealVariety(days, menu) {
   return (
     hasNoRepeatedValues(days.map((day) => day.breakfast)) &&
     hasNoRepeatedValues(days.map((day) => day.main)) &&
     hasNoRepeatedValues(days.map((day) => day.soup).filter(isNonEmptyString)) &&
-    hasNoRepeatedValues(days.map((day) => day.side).filter(isNonEmptyString))
+    hasNoRepeatedValues(days.map((day) => day.side).filter(isNonEmptyString)) &&
+    !hasConsecutiveWateryMains(days, menu.mainsByName)
   );
 }
 
@@ -116,13 +118,14 @@ export function isReusableWeek(week, weekDates, context) {
   }
 
   const days = week.days;
+  const { menu } = context;
   return (
     week.startDate === days[0].displayDate &&
     week.endDate === days[days.length - 1].displayDate &&
     week.title === `Tuần ${days[0].displayDate} - ${days[days.length - 1].displayDate}` &&
     Array.isArray(week.notes) &&
     week.notes.includes(vegetarianNoteForDays(days)) &&
-    hasReusableMealVariety(days) &&
+    hasReusableMealVariety(days, menu) &&
     days.every((day, index) => dayMatchesCurrentRules(day, weekDates[index], context))
   );
 }

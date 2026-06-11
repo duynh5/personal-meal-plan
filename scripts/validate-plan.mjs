@@ -5,6 +5,7 @@ import { lunarDateLabel, solarToLunar } from "./lunar.mjs";
 import { addDays, listWeekdaysInRange, toDisplayDate, toIsoDate } from "./meal-plan/dates.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
 import { breakfastNamesForDay, shouldIncludeRiceSides, sideNamesForDay, soupNamesForDay, vegetarianNoteForDays } from "./meal-plan/menu-rules.mjs";
+import { assertFullWeekStarchRules } from "./meal-plan/starch-rules.mjs";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(scriptPath);
@@ -44,9 +45,6 @@ const fullWeekGroupCounts = new Map([
   ["beefPork", 2],
   ["chickenEgg", 1]
 ]);
-const fullWeekStapleCount = 3;
-const fullWeekNoodleCount = 2;
-
 function countBy(items, field) {
   const counts = new Map();
   for (const item of items) {
@@ -70,18 +68,6 @@ function assertMaxCount(counts, maximumCounts, label, errors) {
     if (actual > maximum) {
       errors.push(`${label} expected at most ${maximum} ${key} entries, found ${actual}.`);
     }
-  }
-}
-
-function assertFullWeekStarches(days, label, errors) {
-  const stapleCount = days.filter((day) => day.starch === "rice" || day.starch === "porridge").length;
-  const noodleCount = days.filter((day) => day.starch === "noodle").length;
-
-  if (stapleCount !== fullWeekStapleCount) {
-    errors.push(`${label} expected ${fullWeekStapleCount} rice or porridge entries, found ${stapleCount}.`);
-  }
-  if (noodleCount !== fullWeekNoodleCount) {
-    errors.push(`${label} expected ${fullWeekNoodleCount} noodle entries, found ${noodleCount}.`);
   }
 }
 
@@ -460,7 +446,7 @@ export function validatePlan(plan) {
       } else {
         assertCount(groupCounts, fullWeekGroupCounts, weekLabel, errors);
       }
-      assertFullWeekStarches(week.days, weekLabel, errors);
+      assertFullWeekStarchRules(week.days, weekLabel, errors, mainsByName);
     }
 
     previousWeekDishes = weekDishes;

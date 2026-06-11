@@ -210,7 +210,8 @@
     {
       "name": "cháo gà gỏi",
       "group": "chickenEgg",
-      "starch": "porridge"
+      "starch": "porridge",
+      "wateryStarch": true
     },
     {
       "name": "cơm cá cơm kho + trứng chiên thịt bằm",
@@ -300,12 +301,14 @@
     {
       "name": "bún heo mộc",
       "group": "beefPork",
-      "starch": "noodle"
+      "starch": "noodle",
+      "wateryStarch": true
     },
     {
       "name": "bún mộc",
       "group": "beefPork",
-      "starch": "noodle"
+      "starch": "noodle",
+      "wateryStarch": true
     },
     {
       "name": "bún thịt nướng",
@@ -345,7 +348,8 @@
     {
       "name": "mì gà nước",
       "group": "chickenEgg",
-      "starch": "noodle"
+      "starch": "noodle",
+      "wateryStarch": true
     },
     {
       "name": "hủ tíu gà xé",
@@ -355,12 +359,14 @@
     {
       "name": "bánh canh heo giò",
       "group": "beefPork",
-      "starch": "noodle"
+      "starch": "noodle",
+      "wateryStarch": true
     },
     {
       "name": "bánh canh cá",
       "group": "fish",
-      "starch": "noodle"
+      "starch": "noodle",
+      "wateryStarch": true
     },
     {
       "name": "bột chiên",
@@ -390,7 +396,8 @@
     {
       "name": "hủ tíu lẩu cá thác lác",
       "group": "fish",
-      "starch": "noodle"
+      "starch": "noodle",
+      "wateryStarch": true
     },
     {
       "name": "bún cá ngừ",
@@ -400,7 +407,8 @@
     {
       "name": "cháo cá lóc",
       "group": "fish",
-      "starch": "porridge"
+      "starch": "porridge",
+      "wateryStarch": true
     },
     {
       "name": "cơm heo cà vạc xi",

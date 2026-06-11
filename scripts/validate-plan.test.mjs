@@ -105,6 +105,13 @@ describe("normalizeMenu", () => {
     assert.throws(() => normalizeMenu(menu, menuOptions), /vegetarian must be a boolean/);
   });
 
+  it("rejects invalid watery starch metadata", () => {
+    const menu = validMenu();
+    menu.mains[0].wateryStarch = "yes";
+
+    assert.throws(() => normalizeMenu(menu, menuOptions), /mains\[0\]\.wateryStarch must be a boolean/);
+  });
+
   it("rejects duplicate soup names after normalization", () => {
     const menu = validMenu();
     menu.soups.push({ name: "light soup", profile: "protein", vegetarian: false });
@@ -250,6 +257,58 @@ describe("validatePlan", () => {
     Object.assign(plan.weeks[1].days[1], fishNoodleDay);
 
     assertValidationError(plan, /main repeats "bánh canh cá" from the previous week/);
+  });
+
+  it("rejects consecutive watery starch mains", () => {
+    const plan = clonePlan();
+    Object.assign(plan.weeks[0].days[0], {
+      main: "bánh canh cá",
+      group: "fish",
+      groupLabel: "Cá",
+      starch: "noodle",
+      soup: null,
+      side: null
+    });
+    Object.assign(plan.weeks[0].days[1], {
+      main: "cháo gà gỏi",
+      group: "chickenEgg",
+      groupLabel: "Gà/trứng",
+      starch: "porridge",
+      soup: null,
+      side: null
+    });
+
+    assertValidationError(plan, /watery starch mains on consecutive days/);
+  });
+
+  it("allows consecutive dry noodle mains", () => {
+    const plan = clonePlan();
+    Object.assign(plan.weeks[0].days[0], {
+      main: "bún cá ngừ",
+      group: "fish",
+      groupLabel: "Cá",
+      starch: "noodle",
+      soup: null,
+      side: null
+    });
+    Object.assign(plan.weeks[0].days[1], {
+      main: "bún thịt nướng",
+      group: "beefPork",
+      groupLabel: "Bò/heo",
+      starch: "noodle",
+      soup: null,
+      side: null
+    });
+    Object.assign(plan.weeks[0].days[3], {
+      main: "cơm cá hồi nướng",
+      group: "fish",
+      groupLabel: "Cá",
+      starch: "rice",
+      soup: "canh súp thịt heo",
+      side: "măng tây xào"
+    });
+
+    assert.doesNotThrow(() => validatePlan(plan));
   });
 
   it("does not let fallback bypass same-week main duplicate rules", () => {

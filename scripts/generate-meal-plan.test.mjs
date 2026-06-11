@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import { buildRollingPlan, chooseRotatedOptionForTest } from "./generate-meal-plan.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
 import { breakfastItemsForDay } from "./meal-plan/menu-rules.mjs";
+import { hasConsecutiveWateryMains } from "./meal-plan/starch-rules.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const menu = readMenu(new URL("../data/menu.json", import.meta.url), {
@@ -85,6 +86,10 @@ function assertValidGeneratedPlan(runDate, options) {
     throw new Error(`${runDate.toISOString()} generated invalid plan ${plan.metadata.startDate}: ${error.message}`);
   }
 
+  for (const week of plan.weeks) {
+    assert.equal(hasConsecutiveWateryMains(week.days, menu.mainsByName), false, `${week.title} has consecutive watery starch mains`);
+  }
+
   return plan;
 }
 
@@ -139,15 +144,17 @@ describe("buildRollingPlan", () => {
     assert.doesNotThrow(() => validatePlan(plan));
   });
 
-  it("avoids same-week fish duplicates when noodle slots repeat", () => {
-    const plan = assertValidGeneratedPlan(new Date("2026-08-07T01:00:00.000Z"), {
+  it("avoids same-week fish duplicates when fish noodle slots repeat", () => {
+    const plan = assertValidGeneratedPlan(new Date("2026-01-02T01:00:00.000Z"), {
       planVariant: "nguyenfamily"
     });
-    const duplicateProneWeek = plan.weeks[3];
-    const mains = duplicateProneWeek.days.map((day) => day.main);
+    const duplicateProneWeek = plan.weeks[0];
+    const fishNoodleMains = duplicateProneWeek.days
+      .filter((day) => day.group === "fish" && day.starch === "noodle")
+      .map((day) => day.main);
 
-    assert.equal(mains.filter((main) => main === "bánh canh cá").length, 1);
-    assert.equal(new Set(mains).size, mains.length);
+    assert.equal(fishNoodleMains.length, 2);
+    assert.equal(new Set(fishNoodleMains).size, fishNoodleMains.length);
   });
 
   it("validates ten years of scheduled Friday runs with previous plan carryover", () => {
@@ -279,8 +286,12 @@ describe("buildRollingPlan", () => {
 
     assert.notEqual(firstSeededDay.breakfast, firstUnseededDay.breakfast);
     assert.notEqual(firstSeededDay.main, firstUnseededDay.main);
-    assert.notEqual(firstSeededDay.soup, firstUnseededDay.soup);
-    assert.notEqual(firstSeededDay.side, firstUnseededDay.side);
+    if (firstUnseededDay.soup || firstSeededDay.soup) {
+      assert.notEqual(firstSeededDay.soup, firstUnseededDay.soup);
+    }
+    if (firstUnseededDay.side || firstSeededDay.side) {
+      assert.notEqual(firstSeededDay.side, firstUnseededDay.side);
+    }
     assert.doesNotThrow(() => validatePlan(seededPlan));
   });
 

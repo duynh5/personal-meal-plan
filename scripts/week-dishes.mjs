@@ -4,6 +4,7 @@ export function createWeekDishes() {
     breakfastCategoryCounts: new Map(),
     lastBreakfast: null,
     mains: new Set(),
+    lastWateryStarch: false,
     soups: new Set(),
     lastSoup: null,
     sides: new Set(),

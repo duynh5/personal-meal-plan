@@ -104,6 +104,9 @@ function validateMains(mains, allowedGroups, allowedStarches, errors) {
     if (!allowedStarches.has(dish.starch)) {
       errors.push(`${label}.starch must be one of: ${[...allowedStarches].join(", ")}.`);
     }
+    if (dish.wateryStarch !== undefined && typeof dish.wateryStarch !== "boolean") {
+      errors.push(`${label}.wateryStarch must be a boolean when present.`);
+    }
   }
 }
 
@@ -137,7 +140,12 @@ export function normalizeMenu(menu, options = {}) {
   validateSides(menu.sides, errors);
 
   const breakfasts = Array.isArray(menu.breakfasts) ? menu.breakfasts : [];
-  const mains = Array.isArray(menu.mains) ? menu.mains : [];
+  const mains = Array.isArray(menu.mains)
+    ? menu.mains.map((dish) => ({
+        ...dish,
+        wateryStarch: dish?.wateryStarch === true
+      }))
+    : [];
   const soups = Array.isArray(menu.soups) ? menu.soups : [];
   const sides = Array.isArray(menu.sides) ? menu.sides : [];
 

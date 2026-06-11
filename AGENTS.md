@@ -6,6 +6,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 
 - Món ăn nằm trong `data/menu.json`; không chép danh sách món vào hướng dẫn này.
 - Trong `data/menu.json`, bữa sáng dùng `{ "name", "category", "vegetarian" }` với `category` là nhãn tiếng Anh.
+- Trong `data/menu.json`, món chính dùng `{ "name", "group", "starch" }`; thêm `wateryStarch: true` cho món tinh bột nước cần tránh xếp liên tiếp.
 - Trong `data/menu.json`, canh dùng `{ "name", "profile", "vegetarian" }` với `profile` là `light` hoặc `protein`.
 - Trong `data/menu.json`, xào/luộc dùng `{ "name", "vegetarian" }`.
 - Chuẩn hóa và kiểm tra cấu trúc menu nằm trong `scripts/meal-plan/menu.mjs`.
@@ -34,6 +35,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 - Tinh bột mỗi tuần đủ 5 ngày nên gồm:
   - 3 ngày cơm hoặc cháo.
   - 2 ngày mì, bún, hoặc bánh canh.
+- Các món chính có `wateryStarch: true` không được xếp vào hai ngày liên tiếp.
 - Ngày chay là mùng 1 và ngày 15 âm lịch Việt Nam, được xác định tự động bằng `scripts/lunar.mjs`.
 - Khi có ngày chay trong tuần, ngày đó thay thế một ngày mặn; các ngày còn lại vẫn cân bằng nhóm món nhiều nhất có thể.
 - Vào ngày chay, bữa sáng, món chính, canh, và xào/luộc nếu xuất hiện đều phải có metadata chay hợp lệ.

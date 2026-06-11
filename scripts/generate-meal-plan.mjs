@@ -18,6 +18,7 @@ import { breakfastItemsForDay, shouldIncludeRiceSides, sideItemsForDay, soupItem
 import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
 import { createWeekDishesFromWeek, isReusableWeek, reusableWeeksByStartDate } from "./meal-plan/reusable-weeks.mjs";
 import { addWeekToRolling, weekRepeatsRollingItems } from "./meal-plan/rolling-dishes.mjs";
+import { canFollowWateryStarch, isWateryDish } from "./meal-plan/starch-rules.mjs";
 import { fullWeekGroupPatterns, fullWeekStarchPatterns, groupPatternFor, rotatedStarchPatterns } from "./meal-plan/week-patterns.mjs";
 import { readPlanConfig } from "./plan-config.mjs";
 import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
@@ -133,27 +134,18 @@ function isVegetarianLunarDay(date) {
   return lunar.day === 1 || lunar.day === 15;
 }
 
-function findDish(group, starch, seed, usedNames, previousWeekMains, rollingMains) {
+function findDish(group, starch, seed, usedNames, previousWeekMains, rollingMains, previousWateryStarch = false) {
   const starchOptions = mainOptionsFor(group, starch);
   const groupOptions = menu.mains.filter((dish) => dish.group === group);
-  const starchDish = chooseScoredOption(
-    starchOptions,
-    seed,
-    () => true,
-    (option) => mainDishScore(option, usedNames, previousWeekMains, rollingMains)
-  );
-  const anyStarchDish = chooseScoredOption(
-    groupOptions,
-    seed,
-    () => true,
-    (option) =>
-      mainDishScore(option, usedNames, previousWeekMains, rollingMains) +
-      (option.starch === starch ? 0 : 300)
-  );
+  const isAllowed = (option) => canFollowWateryStarch(previousWateryStarch, option);
+  const scoreDish = (option) =>
+    mainDishScore(option, usedNames, previousWeekMains, rollingMains) +
+    (option.starch === starch ? 0 : 300);
+  const starchDish = chooseScoredOption(starchOptions, seed, isAllowed, scoreDish);
+  const anyStarchDish = chooseScoredOption(groupOptions, seed, isAllowed, scoreDish);
   const dish = anyStarchDish
     && (!starchDish
-      || mainDishScore(anyStarchDish, usedNames, previousWeekMains, rollingMains)
-        < mainDishScore(starchDish, usedNames, previousWeekMains, rollingMains))
+      || scoreDish(anyStarchDish) < scoreDish(starchDish))
     ? anyStarchDish
     : starchDish;
 
@@ -170,6 +162,7 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
   let previousWeekMainRepeats = 0;
   let rollingMainRepeats = 0;
   let fallbackStarchChoices = 0;
+  let previousWateryStarch = false;
 
   for (const [dayIndex, date] of dates.entries()) {
     const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
@@ -177,8 +170,8 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
     const group = vegetarianDay ? "vegetarian" : groupPattern[dayIndex];
     const starch = starchPattern[dayIndex];
     const dish = vegetarianDay
-      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains)
-      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingDishes.mains);
+      ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch)
+      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch);
 
     if (previousWeekDishes.mains.has(dish.name)) {
       previousWeekMainRepeats += 1;
@@ -190,6 +183,7 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
       fallbackStarchChoices += 1;
     }
     usedMains.add(dish.name);
+    previousWateryStarch = isWateryDish(dish);
   }
 
   return rollingMainRepeats * 200 + previousWeekMainRepeats * 100 + fallbackStarchChoices;
@@ -222,18 +216,25 @@ function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishe
   return bestPattern;
 }
 
-function chooseVegetarianDish(starch, seed, previousWeekMains, rollingMains) {
-  const starchOptions = mainOptionsFor("vegetarian", starch);
+function chooseVegetarianDish(starch, seed, previousWeekMains, rollingMains, previousWateryStarch = false) {
+  const isAllowed = (dish) => canFollowWateryStarch(previousWateryStarch, dish);
+  const starchOptions = mainOptionsFor("vegetarian", starch).filter(isAllowed);
   const dishes = starchOptions.length > 0
     ? starchOptions
-    : menu.mains.filter((dish) => dish.group === "vegetarian");
+    : menu.mains.filter((dish) => dish.group === "vegetarian" && isAllowed(dish));
 
-  return chooseRotatedOption(
+  const dish = chooseRotatedOption(
     dishes,
     seed,
     () => true,
     (dish) => !previousWeekMains.has(dish.name) && !rollingMains.has(dish.name)
   );
+
+  if (!dish) {
+    throw new Error(`Unable to choose a vegetarian main for starch "${starch}".`);
+  }
+
+  return dish;
 }
 
 function chooseSide(list, seed, weekItems, previousWeekItems, rollingItems, previousSide) {
@@ -305,8 +306,8 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
     vegetarianDay
   );
   const dish = vegetarianDay
-    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains)
-    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains);
+    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains, weekDishes.lastWateryStarch)
+    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains, weekDishes.lastWateryStarch);
 
   weekDishes.breakfasts.add(breakfast);
   weekDishes.lastBreakfast = breakfast;
@@ -316,6 +317,7 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
     (weekDishes.breakfastCategoryCounts.get(breakfastCategory) ?? 0) + 1
   );
   weekDishes.mains.add(dish.name);
+  weekDishes.lastWateryStarch = isWateryDish(dish);
 
   const hasRiceSides = shouldIncludeRiceSides(menu, vegetarianDay, dish.starch);
   const previousSoup = weekDishes.lastSoup ?? previousWeekDishes.lastSoup;
