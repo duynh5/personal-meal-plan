@@ -305,7 +305,7 @@ describe("validatePlan", () => {
 
   it("allows consecutive dry noodle mains", () => {
     const plan = clonePlan();
-    Object.assign(plan.weeks[0].days[0], {
+    Object.assign(plan.weeks[1].days[0], {
       main: "bún cá ngừ",
       group: "fish",
       groupLabel: "Cá",
@@ -313,7 +313,7 @@ describe("validatePlan", () => {
       soup: null,
       side: null
     });
-    Object.assign(plan.weeks[0].days[1], {
+    Object.assign(plan.weeks[1].days[1], {
       main: "bún thịt nướng",
       group: "beefPork",
       groupLabel: "Bò/heo",
@@ -321,13 +321,13 @@ describe("validatePlan", () => {
       soup: null,
       side: null
     });
-    Object.assign(plan.weeks[0].days[3], {
-      main: "cơm cá hồi nướng",
-      group: "fish",
-      groupLabel: "Cá",
+    Object.assign(plan.weeks[1].days[4], {
+      main: "cơm heo kho đậu hủ",
+      group: "beefPork",
+      groupLabel: "Bò/heo",
       starch: "rice",
       soup: "canh súp thịt heo",
-      side: "măng tây xào"
+      side: "cà rốt xào"
     });
 
     assert.doesNotThrow(() => validatePlan(plan));
