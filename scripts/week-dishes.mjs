@@ -12,7 +12,7 @@ export function createWeekDishes() {
   };
 }
 
-function createWeekDishesFromDays(days) {
+function createWeekDishesFromDays(days, mainsByName = new Map()) {
   const dishes = createWeekDishes();
   const sortedDays = [...days].sort((left, right) => left.date.localeCompare(right.date));
 
@@ -23,6 +23,7 @@ function createWeekDishesFromDays(days) {
     }
     if (typeof day.main === "string") {
       dishes.mains.add(day.main);
+      dishes.lastWateryStarch = mainsByName.get(day.main)?.wateryStarch === true;
     }
     if (typeof day.soup === "string") {
       dishes.soups.add(day.soup);
@@ -37,7 +38,7 @@ function createWeekDishesFromDays(days) {
   return dishes;
 }
 
-export function previousWeekDishesFromPlan(previousPlan, previousWeekDates) {
+export function previousWeekDishesFromPlan(previousPlan, previousWeekDates, mainsByName = new Map()) {
   if (!previousPlan || !Array.isArray(previousPlan.weeks)) {
     return createWeekDishes();
   }
@@ -51,5 +52,5 @@ export function previousWeekDishesFromPlan(previousPlan, previousWeekDates) {
     return createWeekDishes();
   }
 
-  return createWeekDishesFromDays(previousWeekDays);
+  return createWeekDishesFromDays(previousWeekDays, mainsByName);
 }

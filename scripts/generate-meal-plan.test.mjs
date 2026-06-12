@@ -37,6 +37,19 @@ function assertNoAvoidableRepeats(days, field, options) {
   }
 }
 
+function hasConsecutiveWateryAcrossWeeks(plan) {
+  for (let index = 0; index < plan.weeks.length - 1; index += 1) {
+    const previousMain = menu.mainsByName.get(plan.weeks[index].days.at(-1).main);
+    const nextMain = menu.mainsByName.get(plan.weeks[index + 1].days[0].main);
+
+    if (previousMain?.wateryStarch && nextMain?.wateryStarch) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function eligibleBreakfasts(day, rollingBreakfasts, weeklyBreakfasts) {
   const options = breakfastItemsForDay(menu, day.vegetarianDay);
   const freshEligibleBreakfasts = options.filter(
@@ -155,6 +168,14 @@ describe("buildRollingPlan", () => {
 
     assert.equal(fishNoodleMains.length, 2);
     assert.equal(new Set(fishNoodleMains).size, fishNoodleMains.length);
+  });
+
+  it("avoids watery starch mains across week boundaries", () => {
+    const plan = buildRollingPlan(new Date("2026-08-14T01:00:00.000Z"), {
+      planVariant: "nguyenfamily"
+    });
+
+    assert.equal(hasConsecutiveWateryAcrossWeeks(plan), false);
   });
 
   it("validates ten years of scheduled Friday runs with previous plan carryover", () => {

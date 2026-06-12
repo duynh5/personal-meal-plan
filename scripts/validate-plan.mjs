@@ -143,6 +143,7 @@ export function validatePlan(plan) {
   let rangeStart = null;
   let rangeEnd = null;
   const rollingDishes = createWeekDishes();
+  let previousWateryStarch = false;
 
   if (!plan || typeof plan !== "object") {
     throw new Error("meal-plan.json must contain an object.");
@@ -321,9 +322,13 @@ export function validatePlan(plan) {
         errors.push(`${dayLabel}.main must exist in data/menu.json.`);
       } else {
         const menuDish = mainsByName.get(day.main);
+        if (previousWateryStarch && menuDish.wateryStarch === true) {
+          errors.push(`${dayLabel}.main must not follow another watery starch main on the previous day.`);
+        }
         if (day.group !== menuDish.group || day.starch !== menuDish.starch) {
           errors.push(`${dayLabel}.main metadata must match data/menu.json.`);
         }
+        previousWateryStarch = menuDish.wateryStarch === true;
       }
       if (isNonEmptyString(day.main)) {
         if (weekDishes.mains.has(day.main) && hasNonWeeklyMain(day, weekDishes.mains)) {

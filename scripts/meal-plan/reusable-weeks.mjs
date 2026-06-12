@@ -8,7 +8,7 @@ function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-export function createWeekDishesFromWeek(week) {
+export function createWeekDishesFromWeek(week, mainsByName = new Map()) {
   const dishes = createWeekDishes();
   const days = Array.isArray(week?.days) ? [...week.days] : [];
   days.sort((left, right) => left.date.localeCompare(right.date));
@@ -20,6 +20,7 @@ export function createWeekDishesFromWeek(week) {
     }
     if (isNonEmptyString(day?.main)) {
       dishes.mains.add(day.main);
+      dishes.lastWateryStarch = mainsByName.get(day.main)?.wateryStarch === true;
     }
     if (isNonEmptyString(day?.soup)) {
       dishes.soups.add(day.soup);

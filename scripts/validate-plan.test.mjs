@@ -281,6 +281,28 @@ describe("validatePlan", () => {
     assertValidationError(plan, /watery starch mains on consecutive days/);
   });
 
+  it("rejects watery starch mains across a week boundary", () => {
+    const plan = clonePlan();
+    Object.assign(plan.weeks[0].days[4], {
+      main: "bánh canh cá",
+      group: "fish",
+      groupLabel: "Cá",
+      starch: "noodle",
+      soup: null,
+      side: null
+    });
+    Object.assign(plan.weeks[1].days[0], {
+      main: "hủ tíu lẩu cá thác lác",
+      group: "fish",
+      groupLabel: "Cá",
+      starch: "noodle",
+      soup: null,
+      side: null
+    });
+
+    assertValidationError(plan, /must not follow another watery starch main on the previous day/);
+  });
+
   it("allows consecutive dry noodle mains", () => {
     const plan = clonePlan();
     Object.assign(plan.weeks[0].days[0], {

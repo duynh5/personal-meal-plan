@@ -162,7 +162,7 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
   let previousWeekMainRepeats = 0;
   let rollingMainRepeats = 0;
   let fallbackStarchChoices = 0;
-  let previousWateryStarch = false;
+  let previousWateryStarch = previousWeekDishes.lastWateryStarch;
 
   for (const [dayIndex, date] of dates.entries()) {
     const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
@@ -297,6 +297,9 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   const previousBreakfastName = weekDishes.lastBreakfast ?? previousWeekDishes.lastBreakfast;
   const previousBreakfastCategory = menu.breakfastByName.get(previousBreakfastName)?.category;
   const vegetarianDay = isVegetarianLunarDay(date);
+  const previousWateryStarch = weekDishes.mains.size === 0
+    ? previousWeekDishes.lastWateryStarch
+    : weekDishes.lastWateryStarch;
   const breakfast = chooseBreakfast(
     seed + weekIndex * 11,
     weekDishes,
@@ -306,8 +309,8 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
     vegetarianDay
   );
   const dish = vegetarianDay
-    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains, weekDishes.lastWateryStarch)
-    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains, weekDishes.lastWateryStarch);
+    ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch)
+    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch);
 
   weekDishes.breakfasts.add(breakfast);
   weekDishes.lastBreakfast = breakfast;
@@ -421,16 +424,17 @@ function buildPlanFromDays(
 
   for (const [weekIndex, week] of groupByWeek(days).entries()) {
     const reusableWeek = weeksByStartDate.get(week.key);
+    const reusableWeekStartsWatery = isWateryDish(menu.mainsByName.get(reusableWeek?.days?.[0]?.main));
 
     if (reuseStillContiguous && reusableWeek && isReusableWeek(reusableWeek, week.days, {
       groupLabels,
       isVegetarianLunarDay,
       menu,
       weekdayNames
-    }) && !weekRepeatsRollingItems(reusableWeek, rollingDishes)) {
+    }) && !weekRepeatsRollingItems(reusableWeek, rollingDishes) && !(previousWeekDishes.lastWateryStarch && reusableWeekStartsWatery)) {
       const reusedWeek = structuredClone(reusableWeek);
       weeks.push(reusedWeek);
-      previousWeekDishes = createWeekDishesFromWeek(reusedWeek);
+      previousWeekDishes = createWeekDishesFromWeek(reusedWeek, menu.mainsByName);
       addWeekToRolling(rollingDishes, reusedWeek);
       continue;
     }
@@ -463,7 +467,7 @@ export function buildRollingPlan(runDate = new Date(), options = {}) {
   const previousWeekDates = new Set(
     listWeekdaysInRange(addDays(startDate, -7), addDays(startDate, -1)).map(toIsoDate)
   );
-  const previousWeekDishes = previousWeekDishesFromPlan(options?.previousPlan, previousWeekDates);
+  const previousWeekDishes = previousWeekDishesFromPlan(options?.previousPlan, previousWeekDates, menu.mainsByName);
   const planVariant = options?.planVariant ?? defaultPlanVariant;
   const seedOffset = seedOffsetFor(planVariant);
 
