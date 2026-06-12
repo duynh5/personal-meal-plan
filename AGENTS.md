@@ -35,6 +35,7 @@ Dự án lập kế hoạch bữa sáng và bữa cơm tối gia đình, rồi p
 - Tinh bột mỗi tuần đủ 5 ngày nên gồm:
   - 3 ngày cơm hoặc cháo.
   - 2 ngày mì, bún, hoặc bánh canh.
+- Mỗi tuần đủ 5 ngày phải có ít nhất 1 món chính có `wateryStarch: true`.
 - Các món chính có `wateryStarch: true` không được xếp vào hai ngày liên tiếp.
 - Ngày chay là mùng 1 và ngày 15 âm lịch Việt Nam, được xác định tự động bằng `scripts/lunar.mjs`.
 - Khi có ngày chay trong tuần, ngày đó thay thế một ngày mặn; các ngày còn lại vẫn cân bằng nhóm món nhiều nhất có thể.

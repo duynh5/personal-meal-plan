@@ -2,7 +2,7 @@ import { lunarDateLabel } from "../lunar.mjs";
 import { createWeekDishes } from "../week-dishes.mjs";
 import { toDisplayDate, toIsoDate } from "./dates.mjs";
 import { shouldIncludeRiceSides, vegetarianNoteForDays } from "./menu-rules.mjs";
-import { hasConsecutiveWateryMains } from "./starch-rules.mjs";
+import { hasConsecutiveWateryMains, hasWateryMain } from "./starch-rules.mjs";
 
 function isNonEmptyString(value) {
   return typeof value === "string" && value.trim().length > 0;
@@ -21,6 +21,7 @@ export function createWeekDishesFromWeek(week, mainsByName = new Map()) {
     if (isNonEmptyString(day?.main)) {
       dishes.mains.add(day.main);
       dishes.lastWateryStarch = mainsByName.get(day.main)?.wateryStarch === true;
+      dishes.hasWateryStarchMain ||= dishes.lastWateryStarch;
     }
     if (isNonEmptyString(day?.soup)) {
       dishes.soups.add(day.soup);
@@ -107,6 +108,7 @@ function hasReusableMealVariety(days, menu) {
     hasNoRepeatedValues(days.map((day) => day.main)) &&
     hasNoRepeatedValues(days.map((day) => day.soup).filter(isNonEmptyString)) &&
     hasNoRepeatedValues(days.map((day) => day.side).filter(isNonEmptyString)) &&
+    hasWateryMain(days, menu.mainsByName) &&
     !hasConsecutiveWateryMains(days, menu.mainsByName)
   );
 }

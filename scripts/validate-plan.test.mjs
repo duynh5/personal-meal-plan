@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import { describe, it } from "node:test";
 import { buildRollingPlan } from "./generate-meal-plan.mjs";
-import { normalizeMenu } from "./meal-plan/menu.mjs";
+import { normalizeMenu, readMenu } from "./meal-plan/menu.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const validPlan = JSON.parse(fs.readFileSync(new URL("../meal-plan.json", import.meta.url), "utf8"));
@@ -55,6 +55,7 @@ const groupLabels = {
   chickenEgg: "Gà/trứng",
   vegetarian: "Chay"
 };
+const actualMenu = readMenu(new URL("../data/menu.json", import.meta.url), menuOptions);
 
 function validMenu() {
   return {
@@ -75,6 +76,37 @@ function validMenu() {
     soups: [{ name: "light soup", profile: "light", vegetarian: false }],
     sides: [{ name: "boiled greens", vegetarian: true }]
   };
+}
+
+function replaceWateryMainsWithDryAlternatives(week) {
+  for (const day of week.days) {
+    if (actualMenu.mainsByName.get(day.main)?.wateryStarch !== true) {
+      continue;
+    }
+
+    const usedMains = new Set(week.days.map((candidate) => candidate.main));
+    usedMains.delete(day.main);
+    const replacement = actualMenu.mains.find(
+      (dish) =>
+        dish.group === day.group &&
+        dish.starch === day.starch &&
+        dish.wateryStarch !== true &&
+        !usedMains.has(dish.name)
+    );
+
+    if (!replacement) {
+      throw new Error(`Expected a dry replacement for ${day.main}.`);
+    }
+
+    Object.assign(day, {
+      main: replacement.name,
+      group: replacement.group,
+      groupLabel: groupLabels[replacement.group],
+      starch: replacement.starch,
+      soup: null,
+      side: null
+    });
+  }
 }
 
 describe("normalizeMenu", () => {
@@ -303,31 +335,30 @@ describe("validatePlan", () => {
     assertValidationError(plan, /must not follow another watery starch main on the previous day/);
   });
 
+  it("rejects full weeks without a watery starch main", () => {
+    const plan = clonePlan();
+    replaceWateryMainsWithDryAlternatives(plan.weeks[0]);
+
+    assertValidationError(plan, /weeks\[0\] expected at least 1 watery starch main, found 0/);
+  });
+
   it("allows consecutive dry noodle mains", () => {
     const plan = clonePlan();
-    Object.assign(plan.weeks[1].days[0], {
-      main: "bún cá ngừ",
+    Object.assign(plan.weeks[3].days[1], {
+      main: "cháo cá lóc",
       group: "fish",
       groupLabel: "Cá",
-      starch: "noodle",
+      starch: "porridge",
       soup: null,
       side: null
     });
-    Object.assign(plan.weeks[1].days[1], {
-      main: "bún thịt nướng",
-      group: "beefPork",
-      groupLabel: "Bò/heo",
+    Object.assign(plan.weeks[3].days[2], {
+      main: "hủ tíu gà xé",
+      group: "chickenEgg",
+      groupLabel: "Gà/trứng",
       starch: "noodle",
       soup: null,
       side: null
-    });
-    Object.assign(plan.weeks[1].days[4], {
-      main: "cơm heo kho đậu hủ",
-      group: "beefPork",
-      groupLabel: "Bò/heo",
-      starch: "rice",
-      soup: "canh súp thịt heo",
-      side: "cà rốt xào"
     });
 
     assert.doesNotThrow(() => validatePlan(plan));

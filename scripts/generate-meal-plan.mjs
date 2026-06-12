@@ -13,12 +13,13 @@ import {
   toDisplayDate,
   toIsoDate
 } from "./meal-plan/dates.mjs";
+import { chooseRotatedOption, chooseScoredOption, seedOffsetFor } from "./meal-plan/choice.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
 import { breakfastItemsForDay, shouldIncludeRiceSides, sideItemsForDay, soupItemsForDay } from "./meal-plan/menu-rules.mjs";
 import { renderMarkdown } from "./meal-plan/render-markdown.mjs";
 import { createWeekDishesFromWeek, isReusableWeek, reusableWeeksByStartDate } from "./meal-plan/reusable-weeks.mjs";
 import { addWeekToRolling, weekRepeatsRollingItems } from "./meal-plan/rolling-dishes.mjs";
-import { canFollowWateryStarch, isWateryDish } from "./meal-plan/starch-rules.mjs";
+import { canFollowWateryStarch, canSatisfyWateryTarget, isWateryDish } from "./meal-plan/starch-rules.mjs";
 import { fullWeekGroupPatterns, fullWeekStarchPatterns, groupPatternFor, rotatedStarchPatterns } from "./meal-plan/week-patterns.mjs";
 import { readPlanConfig } from "./plan-config.mjs";
 import { createWeekDishes, previousWeekDishesFromPlan } from "./week-dishes.mjs";
@@ -50,67 +51,6 @@ const menu = readMenu(menuPath, {
   requiredStarches: new Set(fullWeekStarchPatterns.flat())
 });
 
-function rotateIndex(seed, length) {
-  return Math.abs(seed) % length;
-}
-
-function seedOffsetFor(value) {
-  if (value === undefined || value === null || value === "") {
-    return 0;
-  }
-
-  let hash = 0;
-  for (const character of String(value)) {
-    hash = (hash * 31 + character.charCodeAt(0)) % 2147483647;
-  }
-
-  return hash;
-}
-
-function chooseRotatedOption(options, seed, isAllowed, isPreferred) {
-  const start = rotateIndex(seed, options.length);
-
-  for (let offset = 0; offset < options.length; offset += 1) {
-    const option = options[(start + offset) % options.length];
-
-    if (isAllowed(option) && isPreferred(option)) {
-      return option;
-    }
-  }
-
-  for (let offset = 0; offset < options.length; offset += 1) {
-    const option = options[(start + offset) % options.length];
-
-    if (isAllowed(option)) {
-      return option;
-    }
-  }
-
-  return null;
-}
-
-function chooseScoredOption(options, seed, isAllowed, scoreOption) {
-  const start = rotateIndex(seed, options.length);
-  let bestOption = null;
-  let bestScore = Number.POSITIVE_INFINITY;
-
-  for (let offset = 0; offset < options.length; offset += 1) {
-    const option = options[(start + offset) % options.length];
-
-    if (!isAllowed(option)) {
-      continue;
-    }
-
-    const score = scoreOption(option);
-    if (score < bestScore) {
-      bestOption = option;
-      bestScore = score;
-    }
-  }
-
-  return bestOption;
-}
-
 function mainOptionsFor(group, starch) {
   return menu.mains.filter((dish) => dish.group === group && dish.starch === starch);
 }
@@ -134,20 +74,32 @@ function isVegetarianLunarDay(date) {
   return lunar.day === 1 || lunar.day === 15;
 }
 
-function findDish(group, starch, seed, usedNames, previousWeekMains, rollingMains, previousWateryStarch = false) {
+function findDish(
+  group,
+  starch,
+  seed,
+  usedNames,
+  previousWeekMains,
+  rollingMains,
+  previousWateryStarch = false,
+  options = {}
+) {
   const starchOptions = mainOptionsFor(group, starch);
   const groupOptions = menu.mains.filter((dish) => dish.group === group);
   const isAllowed = (option) => canFollowWateryStarch(previousWateryStarch, option);
   const scoreDish = (option) =>
     mainDishScore(option, usedNames, previousWeekMains, rollingMains) +
     (option.starch === starch ? 0 : 300);
+  const wateryStarchDish = options.preferWateryStarch
+    ? chooseScoredOption(groupOptions, seed, (option) => isAllowed(option) && canSatisfyWateryTarget(option, starch), scoreDish)
+    : null;
   const starchDish = chooseScoredOption(starchOptions, seed, isAllowed, scoreDish);
   const anyStarchDish = chooseScoredOption(groupOptions, seed, isAllowed, scoreDish);
-  const dish = anyStarchDish
+  const dish = wateryStarchDish ?? (anyStarchDish
     && (!starchDish
       || scoreDish(anyStarchDish) < scoreDish(starchDish))
     ? anyStarchDish
-    : starchDish;
+    : starchDish);
 
   if (!dish) {
     throw new Error(`Unable to choose a ${group} main for starch "${starch}".`);
@@ -156,12 +108,15 @@ function findDish(group, starch, seed, usedNames, previousWeekMains, rollingMain
   return dish;
 }
 
-function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes, rollingDishes) {
+function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previousWeekDishes, rollingDishes, wateryDayIndex) {
   const groupPattern = groupPatternFor(weekIndex);
   const usedMains = new Set();
   let previousWeekMainRepeats = 0;
   let rollingMainRepeats = 0;
   let fallbackStarchChoices = 0;
+  let stapleCount = 0;
+  let noodleCount = 0;
+  let hasWateryStarchMain = false;
   let previousWateryStarch = previousWeekDishes.lastWateryStarch;
 
   for (const [dayIndex, date] of dates.entries()) {
@@ -169,9 +124,10 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
     const vegetarianDay = isVegetarianLunarDay(date);
     const group = vegetarianDay ? "vegetarian" : groupPattern[dayIndex];
     const starch = starchPattern[dayIndex];
+    const options = { preferWateryStarch: dayIndex === wateryDayIndex && !hasWateryStarchMain };
     const dish = vegetarianDay
       ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch)
-      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch);
+      : findDish(group, starch, seed + weekIndex, usedMains, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch, options);
 
     if (previousWeekDishes.mains.has(dish.name)) {
       previousWeekMainRepeats += 1;
@@ -182,8 +138,24 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
     if (dish.starch !== starch) {
       fallbackStarchChoices += 1;
     }
+    if (dish.starch === "rice" || dish.starch === "porridge") {
+      stapleCount += 1;
+    }
+    if (dish.starch === "noodle") {
+      noodleCount += 1;
+    }
     usedMains.add(dish.name);
     previousWateryStarch = isWateryDish(dish);
+    hasWateryStarchMain ||= previousWateryStarch;
+  }
+
+  const expectedStapleCount = starchPattern.filter((starch) => starch === "rice" || starch === "porridge").length;
+  const expectedNoodleCount = starchPattern.filter((starch) => starch === "noodle").length;
+  if (stapleCount !== expectedStapleCount || noodleCount !== expectedNoodleCount) {
+    return Number.POSITIVE_INFINITY;
+  }
+  if (!hasWateryStarchMain) {
+    return Number.POSITIVE_INFINITY;
   }
 
   return rollingMainRepeats * 200 + previousWeekMainRepeats * 100 + fallbackStarchChoices;
@@ -191,29 +163,39 @@ function scoreStarchPattern(dates, weekIndex, seedOffset, starchPattern, previou
 
 function chooseWeekStarchPattern(dates, weekIndex, seedOffset, previousWeekDishes, rollingDishes) {
   const seed = dates[0].getUTCFullYear() * 10000 + (dates[0].getUTCMonth() + 1) * 100 + dates[0].getUTCDate() + seedOffset;
-  let bestPattern = null;
+  let bestPlan = null;
   let bestScore = Number.POSITIVE_INFINITY;
 
   for (const starchPattern of rotatedStarchPatterns(seed + weekIndex * 17)) {
-    const score = scoreStarchPattern(
-      dates,
-      weekIndex,
-      seedOffset,
-      starchPattern,
-      previousWeekDishes,
-      rollingDishes
-    );
+    for (const wateryDayIndex of [null, ...dates.keys()]) {
+      const score = scoreStarchPattern(
+        dates,
+        weekIndex,
+        seedOffset,
+        starchPattern,
+        previousWeekDishes,
+        rollingDishes,
+        wateryDayIndex
+      );
 
-    if (score < bestScore) {
-      bestPattern = starchPattern;
-      bestScore = score;
+      if (score < bestScore) {
+        bestPlan = { starchPattern, wateryDayIndex };
+        bestScore = score;
+      }
+      if (bestScore === 0) {
+        break;
+      }
     }
     if (bestScore === 0) {
       break;
     }
   }
 
-  return bestPattern;
+  if (!bestPlan) {
+    throw new Error("Unable to choose a starch pattern with at least one watery starch main.");
+  }
+
+  return bestPlan;
 }
 
 function chooseVegetarianDish(starch, seed, previousWeekMains, rollingMains, previousWateryStarch = false) {
@@ -292,7 +274,17 @@ export function chooseRotatedOptionForTest(options, seed, isAllowed, isPreferred
   return chooseRotatedOption(options, seed, isAllowed, isPreferred);
 }
 
-function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, rollingDishes, group, starch) {
+function buildDay(
+  date,
+  weekIndex,
+  seedOffset,
+  weekDishes,
+  previousWeekDishes,
+  rollingDishes,
+  group,
+  starch,
+  options = {}
+) {
   const seed = date.getUTCFullYear() * 10000 + (date.getUTCMonth() + 1) * 100 + date.getUTCDate() + seedOffset;
   const previousBreakfastName = weekDishes.lastBreakfast ?? previousWeekDishes.lastBreakfast;
   const previousBreakfastCategory = menu.breakfastByName.get(previousBreakfastName)?.category;
@@ -310,7 +302,7 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   );
   const dish = vegetarianDay
     ? chooseVegetarianDish(starch, seed + weekIndex, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch)
-    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch);
+    : findDish(group, starch, seed + weekIndex, weekDishes.mains, previousWeekDishes.mains, rollingDishes.mains, previousWateryStarch, options);
 
   weekDishes.breakfasts.add(breakfast);
   weekDishes.lastBreakfast = breakfast;
@@ -321,6 +313,7 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
   );
   weekDishes.mains.add(dish.name);
   weekDishes.lastWateryStarch = isWateryDish(dish);
+  weekDishes.hasWateryStarchMain ||= weekDishes.lastWateryStarch;
 
   const hasRiceSides = shouldIncludeRiceSides(menu, vegetarianDay, dish.starch);
   const previousSoup = weekDishes.lastSoup ?? previousWeekDishes.lastSoup;
@@ -362,15 +355,17 @@ function buildDay(date, weekIndex, seedOffset, weekDishes, previousWeekDishes, r
 function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishes, rollingDishes) {
   const weekDishes = createWeekDishes();
   const groupPattern = groupPatternFor(weekIndex);
-  const starchPattern = chooseWeekStarchPattern(
+  const { starchPattern, wateryDayIndex } = chooseWeekStarchPattern(
     weekDates,
     weekIndex,
     seedOffset,
     previousWeekDishes,
     rollingDishes
   );
-  const days = weekDates.map((date, dayIndex) =>
-    buildDay(
+  const days = weekDates.map((date, dayIndex) => {
+    const preferWateryStarch = dayIndex === wateryDayIndex && !weekDishes.hasWateryStarchMain;
+
+    return buildDay(
       date,
       weekIndex,
       seedOffset,
@@ -378,9 +373,10 @@ function createGeneratedWeek(weekDates, weekIndex, seedOffset, previousWeekDishe
       previousWeekDishes,
       rollingDishes,
       groupPattern[dayIndex],
-      starchPattern[dayIndex]
-    )
-  );
+      starchPattern[dayIndex],
+      { preferWateryStarch }
+    );
+  });
   const vegetarianDays = days.filter((day) => day.vegetarianDay);
   const notes = [];
 

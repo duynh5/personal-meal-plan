@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { buildRollingPlan, chooseRotatedOptionForTest } from "./generate-meal-plan.mjs";
 import { readMenu } from "./meal-plan/menu.mjs";
 import { breakfastItemsForDay } from "./meal-plan/menu-rules.mjs";
-import { hasConsecutiveWateryMains } from "./meal-plan/starch-rules.mjs";
+import { hasConsecutiveWateryMains, hasWateryMain } from "./meal-plan/starch-rules.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const menu = readMenu(new URL("../data/menu.json", import.meta.url), {
@@ -13,6 +13,12 @@ const menu = readMenu(new URL("../data/menu.json", import.meta.url), {
   requiredGroups: new Set(["fish", "beefPork", "chickenEgg"]),
   requiredStarches: new Set(["rice", "noodle"])
 });
+const groupLabels = new Map([
+  ["fish", "Cá"],
+  ["beefPork", "Bò/heo"],
+  ["chickenEgg", "Gà/trứng"],
+  ["vegetarian", "Chay"]
+]);
 
 function weekDishes(week) {
   return {
@@ -90,6 +96,37 @@ function assertBreakfastCategoriesSpreadWhenAvailable(plan) {
   }
 }
 
+function replaceWateryMainsWithDryAlternatives(week) {
+  for (const day of week.days) {
+    if (menu.mainsByName.get(day.main)?.wateryStarch !== true) {
+      continue;
+    }
+
+    const usedMains = new Set(week.days.map((candidate) => candidate.main));
+    usedMains.delete(day.main);
+    const replacement = menu.mains.find(
+      (dish) =>
+        dish.group === day.group &&
+        dish.starch === day.starch &&
+        dish.wateryStarch !== true &&
+        !usedMains.has(dish.name)
+    );
+
+    if (!replacement) {
+      throw new Error(`Expected a dry replacement for ${day.main}.`);
+    }
+
+    Object.assign(day, {
+      main: replacement.name,
+      group: replacement.group,
+      groupLabel: groupLabels.get(replacement.group),
+      starch: replacement.starch,
+      soup: null,
+      side: null
+    });
+  }
+}
+
 function assertValidGeneratedPlan(runDate, options) {
   const plan = buildRollingPlan(runDate, options);
 
@@ -101,6 +138,7 @@ function assertValidGeneratedPlan(runDate, options) {
 
   for (const week of plan.weeks) {
     assert.equal(hasConsecutiveWateryMains(week.days, menu.mainsByName), false, `${week.title} has consecutive watery starch mains`);
+    assert.equal(hasWateryMain(week.days, menu.mainsByName), true, `${week.title} has no watery starch main`);
   }
 
   return plan;
@@ -176,6 +214,35 @@ describe("buildRollingPlan", () => {
     });
 
     assert.equal(hasConsecutiveWateryAcrossWeeks(plan), false);
+  });
+
+  it("includes at least one watery starch main in every full week", () => {
+    const plan = assertValidGeneratedPlan(new Date("2026-06-12T01:00:00.000Z"), {
+      planVariant: "nguyenfamily"
+    });
+
+    for (const week of plan.weeks) {
+      assert.equal(hasWateryMain(week.days, menu.mainsByName), true, `${week.title} has no watery starch main`);
+    }
+  });
+
+  it("keeps watery starch coverage when variant carryover makes dry dishes fresher", () => {
+    const cases = [
+      { variant: "audit-3", weeks: 9 },
+      { variant: "audit-4", weeks: 28 }
+    ];
+
+    for (const { variant, weeks } of cases) {
+      let previousPlan = null;
+
+      for (let week = 0; week <= weeks; week += 1) {
+        const runDate = new Date(Date.UTC(2026, 0, 2 + week * 7, 1, 0, 0));
+        previousPlan = assertValidGeneratedPlan(runDate, {
+          previousPlan,
+          planVariant: variant
+        });
+      }
+    }
   });
 
   it("validates ten years of scheduled Friday runs with previous plan carryover", () => {
@@ -391,6 +458,16 @@ describe("buildRollingPlan", () => {
     const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
     const stalePreviousPlan = structuredClone(firstRun);
     stalePreviousPlan.weeks[1].days[1].breakfast = stalePreviousPlan.weeks[1].days[0].breakfast;
+    const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: stalePreviousPlan });
+
+    assert.notDeepEqual(secondRun.weeks[0], stalePreviousPlan.weeks[1]);
+    assert.doesNotThrow(() => validatePlan(secondRun));
+  });
+
+  it("does not reuse stale overlapping weeks without a watery starch main", () => {
+    const firstRun = buildRollingPlan(new Date("2026-05-22T01:00:00.000Z"));
+    const stalePreviousPlan = structuredClone(firstRun);
+    replaceWateryMainsWithDryAlternatives(stalePreviousPlan.weeks[1]);
     const secondRun = buildRollingPlan(new Date("2026-05-29T01:00:00.000Z"), { previousPlan: stalePreviousPlan });
 
     assert.notDeepEqual(secondRun.weeks[0], stalePreviousPlan.weeks[1]);

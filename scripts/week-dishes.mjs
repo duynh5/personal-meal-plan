@@ -4,6 +4,7 @@ export function createWeekDishes() {
     breakfastCategoryCounts: new Map(),
     lastBreakfast: null,
     mains: new Set(),
+    hasWateryStarchMain: false,
     lastWateryStarch: false,
     soups: new Set(),
     lastSoup: null,
@@ -24,6 +25,7 @@ function createWeekDishesFromDays(days, mainsByName = new Map()) {
     if (typeof day.main === "string") {
       dishes.mains.add(day.main);
       dishes.lastWateryStarch = mainsByName.get(day.main)?.wateryStarch === true;
+      dishes.hasWateryStarchMain ||= dishes.lastWateryStarch;
     }
     if (typeof day.soup === "string") {
       dishes.soups.add(day.soup);
