@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { describe, it } from "node:test";
 import { buildRollingPlan } from "./generate-meal-plan.mjs";
 import { normalizeMenu, readMenu } from "./meal-plan/menu.mjs";
+import { shouldIncludeRiceSides } from "./meal-plan/menu-rules.mjs";
 import { validatePlan } from "./validate-plan.mjs";
 
 const validPlan = JSON.parse(fs.readFileSync(new URL("../meal-plan.json", import.meta.url), "utf8"));
@@ -57,6 +58,145 @@ const groupLabels = {
 };
 const actualMenu = readMenu(new URL("../data/menu.json", import.meta.url), menuOptions);
 
+function sidePairForDay(vegetarianDay) {
+  const soup = vegetarianDay ? actualMenu.vegetarianSoups[0] : actualMenu.soups[0];
+  const side = vegetarianDay ? actualMenu.vegetarianSides[0] : actualMenu.sides[0];
+
+  if (!soup || !side) {
+    throw new Error("Expected soup and side fixtures for a rice main.");
+  }
+
+  return { soup: soup.name, side: side.name };
+}
+
+function assignMain(day, dish) {
+  const riceSides = shouldIncludeRiceSides(actualMenu, day.vegetarianDay, dish.starch)
+    ? sidePairForDay(day.vegetarianDay)
+    : { soup: null, side: null };
+
+  Object.assign(day, {
+    main: dish.name,
+    group: dish.group,
+    groupLabel: groupLabels[dish.group],
+    starch: dish.starch,
+    ...riceSides
+  });
+}
+
+function findDryMainForDay(day, usedMains, preferredStarch = day.starch) {
+  const candidates = actualMenu.mains.filter(
+    (dish) => dish.group === day.group && dish.wateryStarch !== true && !usedMains.has(dish.name)
+  );
+
+  return candidates.find((dish) => dish.starch === preferredStarch) ?? candidates[0];
+}
+
+function canReplaceStarchWithoutChangingBalance(dish, starch) {
+  return dish.starch === starch || ((starch === "rice" || starch === "porridge") && dish.starch === "porridge");
+}
+
+function findWateryMainForDay(day, usedMains) {
+  return actualMenu.mains.find(
+    (dish) =>
+      dish.group === day.group &&
+      dish.wateryStarch === true &&
+      !usedMains.has(dish.name) &&
+      canReplaceStarchWithoutChangingBalance(dish, day.starch)
+  );
+}
+
+function allPlanMains(plan) {
+  return new Set(plan.weeks.flatMap((week) => week.days.map((day) => day.main)));
+}
+
+function previousDayInPlan(plan, weekIndex, dayIndex) {
+  if (dayIndex > 0) {
+    return plan.weeks[weekIndex].days[dayIndex - 1];
+  }
+
+  return plan.weeks[weekIndex - 1]?.days.at(-1) ?? null;
+}
+
+function nextDayInPlan(plan, weekIndex, dayIndex) {
+  const week = plan.weeks[weekIndex];
+  if (dayIndex < week.days.length - 1) {
+    return week.days[dayIndex + 1];
+  }
+
+  return plan.weeks[weekIndex + 1]?.days[0] ?? null;
+}
+
+function isWateryPlanDay(day) {
+  return actualMenu.mainsByName.get(day?.main)?.wateryStarch === true;
+}
+
+function ensureWeekHasWateryMain(plan, firstDryDay, secondDryDay) {
+  const weekIndex = plan.weeks.findIndex((week) => week.days.includes(firstDryDay));
+  const week = plan.weeks[weekIndex];
+
+  if (week.days.some(isWateryPlanDay)) {
+    return;
+  }
+
+  const usedMains = allPlanMains(plan);
+  for (const [dayIndex, day] of week.days.entries()) {
+    if (
+      day === firstDryDay ||
+      day === secondDryDay ||
+      day.vegetarianDay ||
+      isWateryPlanDay(previousDayInPlan(plan, weekIndex, dayIndex)) ||
+      isWateryPlanDay(nextDayInPlan(plan, weekIndex, dayIndex))
+    ) {
+      continue;
+    }
+
+    const replacement = findWateryMainForDay(day, usedMains);
+    if (replacement) {
+      assignMain(day, replacement);
+      return;
+    }
+  }
+
+  throw new Error("Expected a non-adjacent watery replacement to preserve full-week starch rules.");
+}
+
+function findConsecutiveDryNoodleMutation(plan) {
+  for (const [weekIndex, week] of plan.weeks.entries()) {
+    for (let dayIndex = 0; dayIndex < week.days.length - 1; dayIndex += 1) {
+      const firstDay = week.days[dayIndex];
+      const secondDay = week.days[dayIndex + 1];
+      const previousDay = previousDayInPlan(plan, weekIndex, dayIndex);
+      const previousMain = previousDay ? actualMenu.mainsByName.get(previousDay.main) : null;
+
+      if (
+        firstDay.vegetarianDay ||
+        secondDay.vegetarianDay ||
+        firstDay.starch !== "noodle" ||
+        secondDay.starch !== "noodle" ||
+        previousMain?.wateryStarch === true
+      ) {
+        continue;
+      }
+
+      const usedMains = allPlanMains(plan);
+      usedMains.delete(firstDay.main);
+      usedMains.delete(secondDay.main);
+
+      const firstReplacement = findDryMainForDay(firstDay, usedMains, "noodle");
+      if (firstReplacement) {
+        usedMains.add(firstReplacement.name);
+      }
+      const secondReplacement = findDryMainForDay(secondDay, usedMains, "noodle");
+
+      if (firstReplacement && secondReplacement) {
+        return { firstDay, firstReplacement, secondDay, secondReplacement };
+      }
+    }
+  }
+
+  throw new Error("Expected adjacent non-vegetarian noodle days with dry replacements.");
+}
+
 function validMenu() {
   return {
     breakfasts: [
@@ -86,26 +226,13 @@ function replaceWateryMainsWithDryAlternatives(week) {
 
     const usedMains = new Set(week.days.map((candidate) => candidate.main));
     usedMains.delete(day.main);
-    const replacement = actualMenu.mains.find(
-      (dish) =>
-        dish.group === day.group &&
-        dish.starch === day.starch &&
-        dish.wateryStarch !== true &&
-        !usedMains.has(dish.name)
-    );
+    const replacement = findDryMainForDay(day, usedMains);
 
     if (!replacement) {
       throw new Error(`Expected a dry replacement for ${day.main}.`);
     }
 
-    Object.assign(day, {
-      main: replacement.name,
-      group: replacement.group,
-      groupLabel: groupLabels[replacement.group],
-      starch: replacement.starch,
-      soup: null,
-      side: null
-    });
+    assignMain(day, replacement);
   }
 }
 
@@ -344,22 +471,11 @@ describe("validatePlan", () => {
 
   it("allows consecutive dry noodle mains", () => {
     const plan = clonePlan();
-    Object.assign(plan.weeks[3].days[1], {
-      main: "cháo cá lóc",
-      group: "fish",
-      groupLabel: "Cá",
-      starch: "porridge",
-      soup: null,
-      side: null
-    });
-    Object.assign(plan.weeks[3].days[2], {
-      main: "hủ tíu gà xé",
-      group: "chickenEgg",
-      groupLabel: "Gà/trứng",
-      starch: "noodle",
-      soup: null,
-      side: null
-    });
+    const { firstDay, firstReplacement, secondDay, secondReplacement } = findConsecutiveDryNoodleMutation(plan);
+
+    assignMain(firstDay, firstReplacement);
+    assignMain(secondDay, secondReplacement);
+    ensureWeekHasWateryMain(plan, firstDay, secondDay);
 
     assert.doesNotThrow(() => validatePlan(plan));
   });
