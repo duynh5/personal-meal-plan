@@ -1,44 +1,4 @@
-# Kế hoạch ăn 4 tuần từ 29/06/2026
-
-## Tuần 29/06/2026 - 03/07/2026
-
-Ghi chú: Có ngày chay âm lịch: Thứ 2 29/06/2026.
-
-### Thứ 2 - 29/06/2026
-
-- Ngày âm: 15/5 âm lịch
-- Bữa sáng: bánh mì bơ đg
-- Món chính: mì xào chay
-
-### Thứ 3 - 30/06/2026
-
-- Ngày âm: 16/5 âm lịch
-- Bữa sáng: xôi chiên nc tương
-- Món mặn chính: bún heo mộc
-
-### Thứ 4 - 01/07/2026
-
-- Ngày âm: 17/5 âm lịch
-- Bữa sáng: bánh giò
-- Món mặn chính: cơm gà hấp muối
-- Món canh: canh cải xanh
-- Món xào/luộc: măng vàng xào
-
-### Thứ 5 - 02/07/2026
-
-- Ngày âm: 18/5 âm lịch
-- Bữa sáng: bánh ướt
-- Món mặn chính: cơm cá diêu hồng chiên giòn
-- Món canh: canh rau tần ô
-- Món xào/luộc: cà rốt luộc
-
-### Thứ 6 - 03/07/2026
-
-- Ngày âm: 19/5 âm lịch
-- Bữa sáng: hoành thánh
-- Món mặn chính: cơm heo xay chiên
-- Món canh: canh xà lách xoong
-- Món xào/luộc: đậu que xào
+# Kế hoạch ăn 4 tuần từ 06/07/2026
 
 ## Tuần 06/07/2026 - 10/07/2026
 
@@ -157,3 +117,43 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 - Ngày âm: 11/6 âm lịch
 - Bữa sáng: xôi mặn
 - Món mặn chính: bánh canh cá
+
+## Tuần 27/07/2026 - 31/07/2026
+
+Ghi chú: Có ngày chay âm lịch: Thứ 3 28/07/2026.
+
+### Thứ 2 - 27/07/2026
+
+- Ngày âm: 14/6 âm lịch
+- Bữa sáng: nui nước
+- Món mặn chính: cơm heo kho tàu
+- Món canh: canh chua
+- Món xào/luộc: măng vàng xào
+
+### Thứ 3 - 28/07/2026
+
+- Ngày âm: 15/6 âm lịch
+- Bữa sáng: bánh mì bơ đg
+- Món chính: bún nước tương tàu hủ
+
+### Thứ 4 - 29/07/2026
+
+- Ngày âm: 16/6 âm lịch
+- Bữa sáng: bánh giò
+- Món mặn chính: cơm trứng chiên thịt bằm và lạp xưởng
+- Món canh: canh cải xanh
+- Món xào/luộc: cà rốt xào
+
+### Thứ 5 - 30/07/2026
+
+- Ngày âm: 17/6 âm lịch
+- Bữa sáng: xôi chiên nc tương
+- Món mặn chính: bánh canh heo giò
+
+### Thứ 6 - 31/07/2026
+
+- Ngày âm: 18/6 âm lịch
+- Bữa sáng: bánh ướt
+- Món mặn chính: cơm cá chim chiên nước mắm
+- Món canh: canh rau tần ô
+- Món xào/luộc: đậu que xào
