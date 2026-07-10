@@ -1,44 +1,4 @@
-# Kế hoạch ăn 4 tuần từ 06/07/2026
-
-## Tuần 06/07/2026 - 10/07/2026
-
-Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
-
-### Thứ 2 - 06/07/2026
-
-- Ngày âm: 22/5 âm lịch
-- Bữa sáng: xôi ngọt
-- Món mặn chính: cơm bò xào cà chua dưa leo
-- Món canh: canh bí đao
-- Món xào/luộc: đậu que luộc
-
-### Thứ 3 - 07/07/2026
-
-- Ngày âm: 23/5 âm lịch
-- Bữa sáng: bánh mì má hải
-- Món mặn chính: cơm cá chưng tương + nắm mèo + bún tàu
-- Món canh: canh khoai sọ
-- Món xào/luộc: rau lang luộc
-
-### Thứ 4 - 08/07/2026
-
-- Ngày âm: 24/5 âm lịch
-- Bữa sáng: bánh cuốn tây hồ
-- Món mặn chính: mì gà nước
-
-### Thứ 5 - 09/07/2026
-
-- Ngày âm: 25/5 âm lịch
-- Bữa sáng: bánh bao
-- Món mặn chính: bún thịt nướng
-
-### Thứ 6 - 10/07/2026
-
-- Ngày âm: 26/5 âm lịch
-- Bữa sáng: mì nước tương
-- Món mặn chính: cơm cá hồi nướng
-- Món canh: canh rau dền
-- Món xào/luộc: giá hẹ xào
+# Kế hoạch ăn 4 tuần từ 13/07/2026
 
 ## Tuần 13/07/2026 - 17/07/2026
 
@@ -157,3 +117,43 @@ Ghi chú: Có ngày chay âm lịch: Thứ 3 28/07/2026.
 - Món mặn chính: cơm cá chim chiên nước mắm
 - Món canh: canh rau tần ô
 - Món xào/luộc: đậu que xào
+
+## Tuần 03/08/2026 - 07/08/2026
+
+Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
+
+### Thứ 2 - 03/08/2026
+
+- Ngày âm: 21/6 âm lịch
+- Bữa sáng: xôi ngọt
+- Món mặn chính: bánh hỏi thịt quay
+
+### Thứ 3 - 04/08/2026
+
+- Ngày âm: 22/6 âm lịch
+- Bữa sáng: bánh mì má hải
+- Món mặn chính: cơm cá mực dồn thịt
+- Món canh: canh xà lách xoong
+- Món xào/luộc: bắp cải xào
+
+### Thứ 4 - 05/08/2026
+
+- Ngày âm: 23/6 âm lịch
+- Bữa sáng: bánh cuốn tây hồ
+- Món mặn chính: mì gà nước
+
+### Thứ 5 - 06/08/2026
+
+- Ngày âm: 24/6 âm lịch
+- Bữa sáng: bánh bao
+- Món mặn chính: cơm tôm rang thịt ba rọi
+- Món canh: canh bí đao
+- Món xào/luộc: cà rốt luộc
+
+### Thứ 6 - 07/08/2026
+
+- Ngày âm: 25/6 âm lịch
+- Bữa sáng: hoành thánh
+- Món mặn chính: cơm cá trê chiên mắm gừng
+- Món canh: canh khoai sọ
+- Món xào/luộc: đậu que luộc
