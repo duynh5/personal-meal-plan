@@ -1,44 +1,4 @@
-# Kế hoạch ăn 4 tuần từ 20/07/2026
-
-## Tuần 20/07/2026 - 24/07/2026
-
-Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
-
-### Thứ 2 - 20/07/2026
-
-- Ngày âm: 7/6 âm lịch
-- Bữa sáng: há cảo tôm
-- Món mặn chính: cơm heo hành cần xào
-- Món canh: canh bầu
-- Món xào/luộc: bầu luộc
-
-### Thứ 3 - 21/07/2026
-
-- Ngày âm: 8/6 âm lịch
-- Bữa sáng: tàu hủ
-- Món mặn chính: cơm cá chiên
-- Món canh: canh cải bó xôi
-- Món xào/luộc: măng tây xào
-
-### Thứ 4 - 22/07/2026
-
-- Ngày âm: 9/6 âm lịch
-- Bữa sáng: bún riêu
-- Món mặn chính: bột chiên
-
-### Thứ 5 - 23/07/2026
-
-- Ngày âm: 10/6 âm lịch
-- Bữa sáng: cơm chiên trứng
-- Món mặn chính: cơm heo bằm xào cà tím
-- Món canh: canh rau mồng tơi
-- Món xào/luộc: khổ qua xào trứng
-
-### Thứ 6 - 24/07/2026
-
-- Ngày âm: 11/6 âm lịch
-- Bữa sáng: xôi mặn
-- Món mặn chính: bánh canh cá
+# Kế hoạch ăn 4 tuần từ 27/07/2026
 
 ## Tuần 27/07/2026 - 31/07/2026
 
@@ -157,3 +117,43 @@ Ghi chú: Có ngày chay âm lịch: Thứ 5 13/08/2026.
 - Ngày âm: 2/7 âm lịch
 - Bữa sáng: xôi bắp
 - Món mặn chính: hủ tíu lẩu cá thác lác
+
+## Tuần 17/08/2026 - 21/08/2026
+
+Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
+
+### Thứ 2 - 17/08/2026
+
+- Ngày âm: 5/7 âm lịch
+- Bữa sáng: tàu hủ
+- Món mặn chính: cơm heo kho mặn
+- Món canh: canh bầu
+- Món xào/luộc: khổ qua xào trứng
+
+### Thứ 3 - 18/08/2026
+
+- Ngày âm: 6/7 âm lịch
+- Bữa sáng: bún riêu
+- Món mặn chính: bánh canh cá
+
+### Thứ 4 - 19/08/2026
+
+- Ngày âm: 7/7 âm lịch
+- Bữa sáng: cơm chiên trứng
+- Món mặn chính: cơm gà luộc nước mắm
+- Món canh: canh cải bó xôi
+- Món xào/luộc: rau lang luộc
+
+### Thứ 5 - 20/08/2026
+
+- Ngày âm: 8/7 âm lịch
+- Bữa sáng: xôi mặn
+- Món mặn chính: bún chả giò
+
+### Thứ 6 - 21/08/2026
+
+- Ngày âm: 9/7 âm lịch
+- Bữa sáng: bánh mì 7 hổ
+- Món mặn chính: cơm cá rô kho nghệ
+- Món canh: canh rau dền
+- Món xào/luộc: bầu luộc
