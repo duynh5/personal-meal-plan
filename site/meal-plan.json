@@ -1,93 +1,13 @@
 {
   "metadata": {
-    "title": "Kế hoạch ăn 4 tuần từ 14/09/2026",
-    "startDate": "2026-09-14",
-    "endDate": "2026-10-11",
+    "title": "Kế hoạch ăn 4 tuần từ 21/09/2026",
+    "startDate": "2026-09-21",
+    "endDate": "2026-10-18",
     "timezone": "Asia/Ho_Chi_Minh",
-    "generatedAt": "2026-09-11T05:28:45.683Z",
+    "generatedAt": "2026-09-18T05:25:42.550Z",
     "planVariant": "nguyenfamily"
   },
   "weeks": [
-    {
-      "startDate": "14/09/2026",
-      "endDate": "18/09/2026",
-      "title": "Tuần 14/09/2026 - 18/09/2026",
-      "notes": [
-        "Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần."
-      ],
-      "days": [
-        {
-          "date": "2026-09-14",
-          "displayDate": "14/09/2026",
-          "weekday": "Thứ 2",
-          "lunarDate": "4/8 âm lịch",
-          "breakfast": "tàu hủ",
-          "main": "nui bò bầm",
-          "group": "beefPork",
-          "groupLabel": "Bò/heo",
-          "starch": "noodle",
-          "soup": null,
-          "side": null,
-          "vegetarianDay": false
-        },
-        {
-          "date": "2026-09-15",
-          "displayDate": "15/09/2026",
-          "weekday": "Thứ 3",
-          "lunarDate": "5/8 âm lịch",
-          "breakfast": "bún riêu",
-          "main": "cơm cá chưng tương + nắm mèo + bún tàu",
-          "group": "fish",
-          "groupLabel": "Cá",
-          "starch": "rice",
-          "soup": "canh bí đỏ",
-          "side": "bông bí xào",
-          "vegetarianDay": false
-        },
-        {
-          "date": "2026-09-16",
-          "displayDate": "16/09/2026",
-          "weekday": "Thứ 4",
-          "lunarDate": "6/8 âm lịch",
-          "breakfast": "cơm chiên trứng",
-          "main": "cơm gà luộc nước mắm",
-          "group": "chickenEgg",
-          "groupLabel": "Gà/trứng",
-          "starch": "rice",
-          "soup": "canh bầu",
-          "side": "rau muống xào",
-          "vegetarianDay": false
-        },
-        {
-          "date": "2026-09-17",
-          "displayDate": "17/09/2026",
-          "weekday": "Thứ 5",
-          "lunarDate": "7/8 âm lịch",
-          "breakfast": "xôi bắp",
-          "main": "bún mộc",
-          "group": "beefPork",
-          "groupLabel": "Bò/heo",
-          "starch": "noodle",
-          "soup": null,
-          "side": null,
-          "vegetarianDay": false
-        },
-        {
-          "date": "2026-09-18",
-          "displayDate": "18/09/2026",
-          "weekday": "Thứ 6",
-          "lunarDate": "8/8 âm lịch",
-          "breakfast": "bánh mì 7 hổ",
-          "main": "cơm cá hồi nướng",
-          "group": "fish",
-          "groupLabel": "Cá",
-          "starch": "rice",
-          "soup": "canh cải bó xôi",
-          "side": "bầu luộc",
-          "vegetarianDay": false
-        }
-      ]
-    },
     {
       "startDate": "21/09/2026",
       "endDate": "25/09/2026",
@@ -324,6 +244,86 @@
           "starch": "noodle",
           "soup": null,
           "side": null,
+          "vegetarianDay": false
+        }
+      ]
+    },
+    {
+      "startDate": "12/10/2026",
+      "endDate": "16/10/2026",
+      "title": "Tuần 12/10/2026 - 16/10/2026",
+      "notes": [
+        "Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần."
+      ],
+      "days": [
+        {
+          "date": "2026-10-12",
+          "displayDate": "12/10/2026",
+          "weekday": "Thứ 2",
+          "lunarDate": "3/9 âm lịch",
+          "breakfast": "nui nước",
+          "main": "bánh hỏi thịt quay",
+          "group": "beefPork",
+          "groupLabel": "Bò/heo",
+          "starch": "noodle",
+          "soup": null,
+          "side": null,
+          "vegetarianDay": false
+        },
+        {
+          "date": "2026-10-13",
+          "displayDate": "13/10/2026",
+          "weekday": "Thứ 3",
+          "lunarDate": "4/9 âm lịch",
+          "breakfast": "cơm chiên trứng",
+          "main": "cơm cá basa kho tiêu",
+          "group": "fish",
+          "groupLabel": "Cá",
+          "starch": "rice",
+          "soup": "canh bí đỏ",
+          "side": "đậu que luộc",
+          "vegetarianDay": false
+        },
+        {
+          "date": "2026-10-14",
+          "displayDate": "14/10/2026",
+          "weekday": "Thứ 4",
+          "lunarDate": "5/9 âm lịch",
+          "breakfast": "xôi bắp",
+          "main": "mì gà nước",
+          "group": "chickenEgg",
+          "groupLabel": "Gà/trứng",
+          "starch": "noodle",
+          "soup": null,
+          "side": null,
+          "vegetarianDay": false
+        },
+        {
+          "date": "2026-10-15",
+          "displayDate": "15/10/2026",
+          "weekday": "Thứ 5",
+          "lunarDate": "6/9 âm lịch",
+          "breakfast": "bánh mì má hải",
+          "main": "cơm heo kho tàu",
+          "group": "beefPork",
+          "groupLabel": "Bò/heo",
+          "starch": "rice",
+          "soup": "canh bầu",
+          "side": "bông bí xào",
+          "vegetarianDay": false
+        },
+        {
+          "date": "2026-10-16",
+          "displayDate": "16/10/2026",
+          "weekday": "Thứ 6",
+          "lunarDate": "7/9 âm lịch",
+          "breakfast": "bánh cuốn tây hồ",
+          "main": "cơm cá rô kho nghệ",
+          "group": "fish",
+          "groupLabel": "Cá",
+          "starch": "rice",
+          "soup": "canh cải bó xôi",
+          "side": "rau muống xào",
           "vegetarianDay": false
         }
       ]

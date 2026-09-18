@@ -1,44 +1,4 @@
-# Kế hoạch ăn 4 tuần từ 14/09/2026
-
-## Tuần 14/09/2026 - 18/09/2026
-
-Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
-
-### Thứ 2 - 14/09/2026
-
-- Ngày âm: 4/8 âm lịch
-- Bữa sáng: tàu hủ
-- Món mặn chính: nui bò bầm
-
-### Thứ 3 - 15/09/2026
-
-- Ngày âm: 5/8 âm lịch
-- Bữa sáng: bún riêu
-- Món mặn chính: cơm cá chưng tương + nắm mèo + bún tàu
-- Món canh: canh bí đỏ
-- Món xào/luộc: bông bí xào
-
-### Thứ 4 - 16/09/2026
-
-- Ngày âm: 6/8 âm lịch
-- Bữa sáng: cơm chiên trứng
-- Món mặn chính: cơm gà luộc nước mắm
-- Món canh: canh bầu
-- Món xào/luộc: rau muống xào
-
-### Thứ 5 - 17/09/2026
-
-- Ngày âm: 7/8 âm lịch
-- Bữa sáng: xôi bắp
-- Món mặn chính: bún mộc
-
-### Thứ 6 - 18/09/2026
-
-- Ngày âm: 8/8 âm lịch
-- Bữa sáng: bánh mì 7 hổ
-- Món mặn chính: cơm cá hồi nướng
-- Món canh: canh cải bó xôi
-- Món xào/luộc: bầu luộc
+# Kế hoạch ăn 4 tuần từ 21/09/2026
 
 ## Tuần 21/09/2026 - 25/09/2026
 
@@ -159,3 +119,43 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 - Ngày âm: 29/8 âm lịch
 - Bữa sáng: cơm chiên ớt xanh (chay)
 - Món mặn chính: hủ tíu lẩu cá thác lác
+
+## Tuần 12/10/2026 - 16/10/2026
+
+Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
+
+### Thứ 2 - 12/10/2026
+
+- Ngày âm: 3/9 âm lịch
+- Bữa sáng: nui nước
+- Món mặn chính: bánh hỏi thịt quay
+
+### Thứ 3 - 13/10/2026
+
+- Ngày âm: 4/9 âm lịch
+- Bữa sáng: cơm chiên trứng
+- Món mặn chính: cơm cá basa kho tiêu
+- Món canh: canh bí đỏ
+- Món xào/luộc: đậu que luộc
+
+### Thứ 4 - 14/10/2026
+
+- Ngày âm: 5/9 âm lịch
+- Bữa sáng: xôi bắp
+- Món mặn chính: mì gà nước
+
+### Thứ 5 - 15/10/2026
+
+- Ngày âm: 6/9 âm lịch
+- Bữa sáng: bánh mì má hải
+- Món mặn chính: cơm heo kho tàu
+- Món canh: canh bầu
+- Món xào/luộc: bông bí xào
+
+### Thứ 6 - 16/10/2026
+
+- Ngày âm: 7/9 âm lịch
+- Bữa sáng: bánh cuốn tây hồ
+- Món mặn chính: cơm cá rô kho nghệ
+- Món canh: canh cải bó xôi
+- Món xào/luộc: rau muống xào
