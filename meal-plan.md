@@ -1,44 +1,4 @@
-# Kế hoạch ăn 4 tuần từ 05/10/2026
-
-## Tuần 05/10/2026 - 09/10/2026
-
-Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
-
-### Thứ 2 - 05/10/2026
-
-- Ngày âm: 25/8 âm lịch
-- Bữa sáng: bánh mì phomai chuối
-- Món mặn chính: bún thịt nướng
-
-### Thứ 3 - 06/10/2026
-
-- Ngày âm: 26/8 âm lịch
-- Bữa sáng: hoành thánh
-- Món mặn chính: cơm cá chiên
-- Món canh: canh khoai mỡ
-- Món xào/luộc: cà rốt xào
-
-### Thứ 4 - 07/10/2026
-
-- Ngày âm: 27/8 âm lịch
-- Bữa sáng: mì nước tương
-- Món mặn chính: cơm gà kho gừng
-- Món canh: canh khoai sọ
-- Món xào/luộc: cà rốt luộc
-
-### Thứ 5 - 08/10/2026
-
-- Ngày âm: 28/8 âm lịch
-- Bữa sáng: bắp luộc
-- Món mặn chính: cơm heo xay chiên
-- Món canh: canh chua
-- Món xào/luộc: đậu que xào
-
-### Thứ 6 - 09/10/2026
-
-- Ngày âm: 29/8 âm lịch
-- Bữa sáng: cơm chiên ớt xanh (chay)
-- Món mặn chính: hủ tíu lẩu cá thác lác
+# Kế hoạch ăn 4 tuần từ 12/10/2026
 
 ## Tuần 12/10/2026 - 16/10/2026
 
@@ -159,3 +119,43 @@ Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày
 - Món mặn chính: cơm cá chim chiên nước mắm
 - Món canh: canh xà lách xoong
 - Món xào/luộc: măng tây xào
+
+## Tuần 02/11/2026 - 06/11/2026
+
+Ghi chú: Không có ngày chay mùng 1 hoặc rằm âm lịch trong các ngày ăn của tuần.
+
+### Thứ 2 - 02/11/2026
+
+- Ngày âm: 24/9 âm lịch
+- Bữa sáng: bánh mì ốp la
+- Món mặn chính: bún bò xáo
+
+### Thứ 3 - 03/11/2026
+
+- Ngày âm: 25/9 âm lịch
+- Bữa sáng: hoành thánh
+- Món mặn chính: hủ tíu lẩu cá thác lác
+
+### Thứ 4 - 04/11/2026
+
+- Ngày âm: 26/9 âm lịch
+- Bữa sáng: mì nước tương
+- Món mặn chính: cơm gà nướng muối
+- Món canh: canh khoai sọ
+- Món xào/luộc: bắp cải xào
+
+### Thứ 5 - 05/11/2026
+
+- Ngày âm: 27/9 âm lịch
+- Bữa sáng: bắp luộc
+- Món mặn chính: cơm heo kho mặn
+- Món canh: canh chua
+- Món xào/luộc: cà rốt xào
+
+### Thứ 6 - 06/11/2026
+
+- Ngày âm: 28/9 âm lịch
+- Bữa sáng: cơm chiên ớt xanh (chay)
+- Món mặn chính: cơm cá trê chiên mắm gừng
+- Món canh: canh khoai mỡ
+- Món xào/luộc: cà rốt luộc
