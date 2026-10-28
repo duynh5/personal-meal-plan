@@ -168,16 +168,6 @@
       "starch": "rice"
     },
     {
-      "name": "cơm heo ragu",
-      "group": "beefPork",
-      "starch": "rice"
-    },
-    {
-      "name": "cơm heo thịt bằm chiên",
-      "group": "beefPork",
-      "starch": "rice"
-    },
-    {
       "name": "cơm gà luộc nước mắm",
       "group": "chickenEgg",
       "starch": "rice"
@@ -299,13 +289,7 @@
       "starch": "noodle"
     },
     {
-      "name": "bún heo mộc",
-      "group": "beefPork",
-      "starch": "noodle",
-      "wateryStarch": true
-    },
-    {
-      "name": "bún mộc",
+      "name": "bún mọc",
       "group": "beefPork",
       "starch": "noodle",
       "wateryStarch": true
@@ -434,6 +418,32 @@
       "name": "cơm heo bằm xào cà tím",
       "group": "beefPork",
       "starch": "rice"
+    },
+    {
+      "name": "cơm heo ba rọi xào cải chua",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm lagu sườn",
+      "group": "beefPork",
+      "starch": "rice"
+    },
+    {
+      "name": "cơm mực xào hành cần",
+      "group": "fish",
+      "starch": "rice"
+    },
+    {
+      "name": "hủ tiếu xương",
+      "group": "beefPork",
+      "starch": "noodle",
+      "wateryStarch": true
+    },
+    {
+      "name": "cơm gà nướng tây ban nha",
+      "group": "chickenEgg",
+      "starch": "rice"
     }
   ],
   "soups": [
@@ -524,6 +534,11 @@
     },
     {
       "name": "canh cá cà chua",
+      "profile": "protein",
+      "vegetarian": false
+    },
+    {
+      "name": "canh cá nấu ngót",
       "profile": "protein",
       "vegetarian": false
     }

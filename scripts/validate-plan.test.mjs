@@ -145,12 +145,22 @@ function planWithConsecutiveDryNoodleMains() {
   const plan = buildRollingPlan(new Date("2026-06-26T01:00:00.000Z"), { existingPlan: null });
   const sourceWeek = plan.weeks[1];
   const targetWeek = plan.weeks[3];
+  const targetChickenDay = targetWeek.days[2];
+  const unusedDryChickenMain = findDryMainForDay(
+    targetChickenDay,
+    usedPlanFieldValues(plan, "main", targetChickenDay),
+    "rice"
+  );
+
+  if (!unusedDryChickenMain) {
+    throw new Error("Expected an unused dry chicken main for the consecutive noodle fixture.");
+  }
 
   assignMainInPlan(plan, sourceWeek.days[1], dishByName("cơm cá hồi nướng"));
   assignMainInPlan(plan, sourceWeek.days[4], dishByName("hủ tíu lẩu cá thác lác"));
 
   assignMainInPlan(plan, targetWeek.days[1], dishByName("cháo cá lóc"));
-  assignMainInPlan(plan, targetWeek.days[2], dishByName("cơm gà hấp muối"));
+  assignMainInPlan(plan, targetChickenDay, unusedDryChickenMain);
   assignMainInPlan(plan, targetWeek.days[3], dishByName("bún thịt nướng"));
   assignMainInPlan(plan, targetWeek.days[4], dishByName("bún cá ngừ"));
 
